@@ -52,8 +52,9 @@ function! sidebar#Open(drawer)
 	
 	" Create the appropriate keybindings for the drawer
 	let mappings = g:sidebars[a:drawer].mappings
+	map clear
 	for q in keys(mappings)
-		let g:newmap = "nnoremap <silent> " . q . " :call " . a:drawer . "#" . mappings[q] . "<CR>"
+		let g:newmap = "nnoremap <buffer> <silent> " . q . " :call " . a:drawer . "#" . mappings[q] . "<CR>"
 		exec g:newmap
 	endfor
 

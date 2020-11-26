@@ -6,7 +6,6 @@ function! filetree#Initialize()
 	call s:InitializeMappings()
 	call s:InitializeIcons()
 
-
 	let s:pwd = getcwd()
 	let g:opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
 	let s:show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
@@ -17,39 +16,39 @@ function! filetree#Initialize()
 	let g:tree = s:GenerateTree(getcwd(), 0) " Stores a list of file/level pairs, representing each files distance from the root directory
 
 	" Draw the filetree to the screen
-	call sidebar#Print(s:GetText())
+	call s:Print()
 endfunction
 
 " }}}
 " FUNCTION: s:InitializeMappings() {{{1
 function! s:InitializeMappings()
 	let s:mappings = {}
-	let s:mappings["<Space>"] = "Activate()"
+	let s:mappings["<Space>"] = "ShowContents()"
 	let s:mappings["<CR>"] = "Open()"
-	let s:mappings["."] = "ToggleHidden(-1)"
+	let s:mappings["."] = "ShowHidden(-1)"
+	let s:mappings.v = "ShowInfo()"
 
-	let s:mappings.r = "Reload()"
-	let s:mappings.k = "Scroll('up')"
-	let s:mappings.j = "Scroll('down')"
-	let s:mappings.u = "DirShift('up')"
-	let s:mappings.U = "DirShift('down')"
-	let s:mappings.h = "DirMove('up')"
-	let s:mappings.l = "DirMove('down')"
-
-	let s:mappings.a = "AddFile(' ')"
+	let s:mappings.r  = "Reload()"
+	let s:mappings.k  = "Scroll('up')"
+	let s:mappings.j  = "Scroll('down')"
+	let s:mappings.u  = "DirShift('up')"
+	let s:mappings.U  = "DirShift('down')"
+	let s:mappings.h  = "DirMove('up')"
+	let s:mappings.l  = "DirMove('down')"
+	
+	let s:mappings.a  = "AddFile(' ')"
 	let s:mappings.af = "AddFile('f')"
 	let s:mappings.ad = "AddFile('d')"
 
-	let s:mappings.fx = "EditFile('!chmod +x <file>')"
-	let s:mappings.fX = "EditFile('!chmod -x <file>')"
-	let s:mappings.fd  = "DeleteFile()"
-	let s:mappings.fr  = "RenameFile()"
-	let s:mappings.fm  = "MoveFile()"
-	let s:mappings.fc  = "CopyFile()"
+	let s:mappings.fx = "SetExecutable(-1)"
+	let s:mappings.fd = "DeleteFile()"
+	let s:mappings.fr = "RenameFile()"
+	let s:mappings.fm = "MoveFile()"
+	let s:mappings.fc = "CopyFile()"
 
-	let s:mappings.ga  = "GitFile('add')"
-	let s:mappings.gc  = "GitFile('commit')"
-	let s:mappings.gC  = "GitFile('ammend')"
+	let s:mappings.ga = "GitFile('add')"
+	let s:mappings.gc = "GitFile('commit')"
+	let s:mappings.gC = "GitFile('ammend')"
 
 	let g:sidebars.filetree.mappings = s:mappings
 endfunction
@@ -165,17 +164,19 @@ function! filetree#Scroll(direction)
 	endif
 endfunction
 " }}}
-" FUNCTION: filetree#Activate() {{{1
-function! filetree#Activate()
+" FUNCTION: filetree#ShowContents() {{{1
+function! filetree#ShowContents()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	if s:GetProperty(path, "d")
 		call s:ToggleDirectory(file_index)
+	else
+		call s:ViewFile(path)
 	endif
 
 	call s:Print()
@@ -187,9 +188,9 @@ function! filetree#Open()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	if s:GetProperty(path, "d")
 		call s:ChangeDirectory(path)
@@ -204,10 +205,10 @@ endfunction
 " FUNCTION: filetree#DirShift(direction) {{{1
 function! filetree#DirShift(direction)
 	let file_index = s:CursorIndex()
-	let path = g:tree[file_index].path
-
 	if file_index == -1
 		let path = s:pwd
+	else
+		let path = g:tree[file_index].path
 	endif
 
 	if a:direction == "up"
@@ -243,9 +244,9 @@ function! filetree#DirMove(direction)
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	" If moving up a level (h)
 	if a:direction == "up"
@@ -286,8 +287,42 @@ function! filetree#DirMove(direction)
 endfunction
 
 " }}}
-" FUNCTION: filetree#ToggleHidden(value) {{{1
-function! filetree#ToggleHidden(value)
+" FUNCTION: filetree#ShowInfo() {{{1
+function! filetree#ShowInfo()
+	let path = g:tree[s:CursorIndex()].path
+	let real_path = resolve(path)
+
+	" Create a string with the path at the top to display
+	let info = path . "\n"
+	
+	" Detect if it is a link and show the redirect path
+	let redirect = system("readlink '" . path . "' 2> /dev/null")
+	if redirect != ""
+		let info .= "Redirects to: " . redirect
+	endif
+	
+	" Get the file type, and if it is a normal file get its size
+	let type = system("stat -c %F '" . path . "' 2> /dev/null")
+	let info .= "File Type: " . substitute(type, "^.", "\\u&", "g")
+	
+	" Get the file size, or the size of the contents of a directory
+	let size = split(system("du -sh '" . real_path . "' 2> /dev/null"), "	")[0]
+	if type[0:2] == "dir" || type[0:2] == "sym"
+		let info .= "Size of Contents: " . size . "\n"
+	else
+		let info .= "File Size: " . size . "\n"
+	endif
+	
+	" Get other miscellaneous info
+	let info .= "Created: " . system("stat -c %w '" . path . "' 2> /dev/null")
+	let info .= "Owner: " . system("stat -c %U '" . path . "' 2> /dev/null")
+	let info .= "Permissions: " . system("stat -c %A '" . path . "' 2> /dev/null")
+	echo info
+endfunction
+
+" }}}
+" FUNCTION: filetree#ShowHidden(value) {{{1
+function! filetree#ShowHidden(value)
 	let path = g:tree[s:CursorIndex()].path
 	if a:value == 0
 		let s:show_hidden = 0
@@ -323,20 +358,32 @@ function! filetree#AddFile(type)
 endfunction
 
 " }}}
-" FUNCTION: filetree#EditFile(cmd) {{{1
-function! filetree#EditFile(cmd)
+" FUNCTION: filetree#SetExecutable(value) {{{1
+function! filetree#SetExecutable(value) 
 	let file_index = s:CursorIndex()
-	if file_index == -1
+	if file_index == -1 || g:tree[file_index].end == "/"
 		return
+	else
+		let path = g:tree[file_index].path
+	endif
+	
+	if a:value == 0
+		silent exec "!chmod -x '" . path . "'"
+		let g:tree[file_index].end = ""
+	elseif a:value == 1
+		silent exec "!chmod +x '" . path . "'"
+		let g:tree[file_index].end = "*"
+	else
+		if g:tree[file_index].end == "*"
+			silent exec "!chmod -x '" . path . "'"
+			let g:tree[file_index].end = ""
+		else
+			silent exec "!chmod +x '" . path . "'"
+		let g:tree[file_index].end = "*"
+		endif
 	endif
 
-	let path = g:tree[file_index].path
-
-	" Run the command specified, with <file> being the file path
-	let g:command = substitute(a:cmd, "<file>", "'" . path . "'", "g")
-	silent exec substitute(a:cmd, "<file>", "'" . path . "'", "g")
-
-	call filetree#Reload()
+	call s:Print()
 endfunction
 
 " }}}
@@ -382,9 +429,9 @@ function! filetree#RenameFile()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	let dir_path = join(split(path, "/")[0:-2], "/")
 	if dir_path == ""
@@ -410,9 +457,9 @@ function! filetree#MoveFile()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	let new_path = input("New path: ")
 
@@ -427,9 +474,9 @@ function! filetree#CopyFile()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	let new_path = input("Path of copy: ")
 
@@ -444,9 +491,9 @@ function! filetree#GitFile(cmd)
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
+	else
+		let path = g:tree[file_index].path
 	endif
-
-	let path = g:tree[file_index].path
 
 	" Move to the parent directory of the file
 	let real_dir = getcwd()
@@ -699,7 +746,7 @@ function! s:IsHidden(path)
 			return 1
 		endif
 	endfor
-	
+
 	return 0
 endfunction
 
