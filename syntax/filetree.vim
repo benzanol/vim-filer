@@ -11,16 +11,16 @@ syn match FiletreeGitModified "✗"
 silent exec "syn match FiletreeIndent '" . filetree#Get("s:indent_marker") . "'"
 
 " Link color groups to colors
-let grey = synIDtrans(hlID("Comment"))
-let red = synIDtrans(hlID("Directory"))
-let green = synIDtrans(hlID("String"))
-let purple = synIDtrans(hlID("Question"))
+let grey = { "fg":synIDattr(synIDtrans(hlID("Comment")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Comment")), "fg#", "gui") }
+let red = { "fg":synIDattr(synIDtrans(hlID("Directory")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Directory")), "fg#", "gui") }
+let green = { "fg":synIDattr(synIDtrans(hlID("String")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("String")), "fg#", "gui") }
+let g:purple = { "fg":synIDattr(synIDtrans(hlID("Question")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Question")), "fg#", "gui") }
 
-exec "hi FiletreeIndent ctermfg=" . synIDattr(grey, "fg#", "cterm") . " guifg=" . synIDattr(grey, "fg#", "gui")
-exec "hi FiletreeDirectory ctermfg=" . synIDattr(red, "fg#", "cterm") . " guifg=" . synIDattr(red, "fg#", "gui")
-exec "hi FiletreeRedirect ctermfg=" . synIDattr(purple, "fg#", "cterm") . " guifg=" . synIDattr(purple, "fg#", "gui")
-exec "hi FiletreeExecutable ctermfg=" . synIDattr(green, "fg#", "cterm") . " guifg=" . synIDattr(green, "fg#", "gui")
-exec "hi FiletreePwd ctermfg=" . synIDattr(red, "fg#", "cterm") . " guifg=" . synIDattr(red, "fg#", "gui") . " cterm=bold,underline gui=bold,underline"
+exec "hi FiletreeIndent ctermfg=" . grey.fg . " guifg=" . grey.bg
+exec "hi FiletreeDirectory ctermfg=" . red.fg . " guifg=" . red.bg
+exec "hi FiletreeRedirect ctermfg=" . g:purple.fg . " guifg=" . g:purple.bg
+exec "hi FiletreeExecutable ctermfg=" . green.fg . " guifg=" . green.bg
+exec "hi FiletreePwd ctermfg=" . red.fg . " guifg=" . red.bg
 
 hi FiletreeGitCommitted ctermfg=82  guifg=#5FFF00 cterm=bold gui=bold
 hi FiletreeGitAdded ctermfg=75  guifg=#5FAFFF cterm=bold gui=bold

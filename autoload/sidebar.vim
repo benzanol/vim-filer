@@ -1,5 +1,5 @@
 " Initialize script variables {{{1
-let s:drawers = []
+let g:sidebars = {}
 let s:plugin_path = expand("<sfile>:p:h:h")
 let s:name = "SidebarPlugin"
 let s:position = "left"
@@ -45,11 +45,19 @@ function! sidebar#Open(drawer)
 	setlocal winfixwidth
 
 	" Initialize the drawer if it hasn't been already
-	if index(s:drawers, a:drawer) == -1
+	if !has_key(g:sidebars, a:drawer)
+		let g:sidebars[a:drawer] = {}
 		exec "call " . a:drawer . "#Initialize()"
-		call add(s:drawers, a:drawer)
 	endif
+	
+	" Create the appropriate keybindings for the drawer
+	let mappings = g:sidebars[a:drawer].mappings
+	for q in keys(mappings)
+		let g:newmap = "nnoremap <silent> " . q . " :call " . a:drawer . "#" . mappings[q] . "<CR>"
+		exec g:newmap
+	endfor
 
+	" Enable syntax highlighting for the drawer
 	exec "source " . s:plugin_path . "/syntax/" . a:drawer . ".vim"
 endfunction
 
@@ -67,6 +75,10 @@ function! sidebar#Print(text)
 	endfor
 	silent 1delete
 
+	" Move cursor up and down file to load colors
+	norm! gg
+	exec "norm! " . line("$") . "j"
+	
 	" Move cursor to previous location
 	call cursor(cursor_location)
 

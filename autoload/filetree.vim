@@ -1,5 +1,12 @@
+" ==============================================================================
+" Important functions
+" ==============================================================================
 " FUNCTION: filetree#Initialize() {{{1
 function! filetree#Initialize()
+	call s:InitializeMappings()
+	call s:InitializeIcons()
+
+
 	let s:pwd = getcwd()
 	let g:opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
 	let s:show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
@@ -9,88 +16,197 @@ function! filetree#Initialize()
 
 	let g:tree = s:GenerateTree(getcwd(), 0) " Stores a list of file/level pairs, representing each files distance from the root directory
 
-	" Create filetree keybindings
-	nnoremap <buffer> <silent> <nowait> . :call filetree#ToggleHidden(-1)<CR>
-	nnoremap <buffer> <silent> <nowait> <Space> :call filetree#Activate()<CR>
-	nnoremap <buffer> <silent> <nowait> <CR> :call filetree#Open()<CR>
-	nnoremap <buffer> <silent> <nowait> c :call filetree#Cd()<CR>
-	nnoremap <buffer> <silent> <nowait> r :call filetree#Reload()<CR>
-	exec "nnoremap <buffer> <silent> j j0/^\\(" . s:indent_marker . "\\)*.\\zs.<CR>3h"
-	exec "nnoremap <buffer> <silent> k k0/^\\(" . s:indent_marker . "\\)*.\\zs.<CR>3h"
-	nmap J jjjj
-	nmap K kkkk
-	nnoremap <buffer> <silent> <nowait> h :call filetree#DirMove("up")<CR>
-	nnoremap <buffer> <silent> <nowait> l :call filetree#DirMove("down")<CR>
-	nnoremap <buffer> <silent> <nowait> u :call filetree#DirShift("up")<CR>
-	nnoremap <buffer> <silent> <nowait> U :call filetree#DirShift("down")<CR>
-
-	" File editting commands ( f + modifier )
-	nnoremap <buffer> <silent> <nowait> fd :call filetree#DeleteFile()<CR>
-	nnoremap <buffer> <silent> <nowait> fc :call filetree#CopyFile()<CR>
-	nnoremap <buffer> <silent> <nowait> fm :call filetree#MoveFile()<CR>
-	nnoremap <buffer> <silent> <nowait> fx :call filetree#EditFile("!chmod +x <file>")<CR>
-	nnoremap <buffer> <silent> <nowait> fX :call filetree#EditFile("!chmod -x<file>")<CR>
-
-	" File adding commands ( a + modifier )
-	nnoremap <buffer> <silent> <nowait> a :call filetree#AddFile(0)<CR>
-	nnoremap <buffer> <silent> <nowait> af :call filetree#AddFile(1)<CR>
-	nnoremap <buffer> <silent> <nowait> ad :call filetree#AddFile(2)<CR>
-
-	" Git commands ( g + modifier )
-	nnoremap <buffer> <silent> <nowait> ga :call filetree#GitFile("add")<CR>
-	nnoremap <buffer> <silent> <nowait> gc :call filetree#GitFile("commit")<CR>
-	nnoremap <buffer> <silent> <nowait> gC :call filetree#GitFile("ammend")<CR>
-	
 	" Draw the filetree to the screen
 	call sidebar#Print(s:GetText())
 endfunction
 
+" }}}
+" FUNCTION: s:InitializeMappings() {{{1
+function! s:InitializeMappings()
+	let s:mappings = {}
+	let s:mappings["<Space>"] = "Activate()"
+	let s:mappings["<CR>"] = "Open()"
+	let s:mappings["."] = "ToggleHidden(-1)"
+
+	let s:mappings.r = "Reload()"
+	let s:mappings.k = "Scroll('up')"
+	let s:mappings.j = "Scroll('down')"
+	let s:mappings.u = "DirShift('up')"
+	let s:mappings.U = "DirShift('down')"
+	let s:mappings.h = "DirMove('up')"
+	let s:mappings.l = "DirMove('down')"
+
+	let s:mappings.a = "AddFile(' ')"
+	let s:mappings.af = "AddFile('f')"
+	let s:mappings.ad = "AddFile('d')"
+
+	let s:mappings.fx = "EditFile('!chmod +x <file>')"
+	let s:mappings.fX = "EditFile('!chmod -x <file>')"
+	let s:mappings.fd  = "DeleteFile()"
+	let s:mappings.fr  = "RenameFile()"
+	let s:mappings.fm  = "MoveFile()"
+	let s:mappings.fc  = "CopyFile()"
+
+	let s:mappings.ga  = "GitFile('add')"
+	let s:mappings.gc  = "GitFile('commit')"
+	let s:mappings.gC  = "GitFile('ammend')"
+
+	let g:sidebars.filetree.mappings = s:mappings
+endfunction
+" }}}
+" FUNCTION: s:InitializeIcons() {{{1
+function! s:InitializeIcons()
+	" let icon_type = 'outline'
+	let icon_type = 'filled'
+
+	let s:filetypes = []
+	call add(s:filetypes, {"type":"archive", "outline":"", "filled":"", "extensions":["tar", "zip", "gz", "xz", "bz2"]})
+	call add(s:filetypes, {"type":"text",    "outline":"", "filled":"", "extensions":["txt", "doc", "docx"]})
+	call add(s:filetypes, {"type":"image",   "outline":"", "filled":"", "extensions":["png", "jpg", "jpeg", "gif"]})
+	call add(s:filetypes, {"type":"video",   "outline":"", "filled":"", "extensions":["mp4", "mov", "wmv", "webm"]})
+	call add(s:filetypes, {"type":"audio",   "outline":"", "filled":"", "extensions":["mp3", "wav", "flac"]})
+	call add(s:filetypes, {"type":"code",    "outline":"", "filled":"", "extensions":["sh", "bash", "zsh", "fish"]})
+	call add(s:filetypes, {"type":"pdf",     "outline":"", "filled":"", "extensions":["pdf"]})
+	call add(s:filetypes, {"type":"vim",     "outline":"", "filled":"", "extensions":["vim"]})
+
+	let s:type_icons = {}
+	for q in s:filetypes
+		for r in q.extensions
+			let s:type_icons[r] = q[icon_type]
+		endfor
+	endfor
+
+	let s:file_categories = []
+	call add(s:file_categories, {"type":"dir",     "outline":"", "filled":""})
+	call add(s:file_categories, {"type":"dirlink", "outline":"", "filled":""})
+	call add(s:file_categories, {"type":"file",    "outline":"", "filled":""})
+	call add(s:file_categories, {"type":"link",    "outline":"", "filled":""})
+	call add(s:file_categories, {"type":"hidden",  "outline":"﬒", "filled":"﬒"})
+
+	let s:file_icons = {}
+	for q in s:file_categories
+		let s:file_icons[q.type] = q[icon_type]
+	endfor
+
+	" Git icons
+	let s:git_icons = {}
+	let s:git_icons.committed = "✓"
+	let s:git_icons.added = "✚"
+	let s:git_icons.modified = "✗"
+endfunction
+" }}}
+
+" FUNCTION: s:Print() {{{1
+function! s:Print()
+	call sidebar#Print(s:GetText())
+endfunction
+
+" }}}
+" FUNCTION: s:GetText() {{{1
+function! s:GetText()
+	" Get the longest version of the heading that will fit in the window
+	if s:pwd == "/"
+		let heading = "/"
+	else
+		let heading = s:pwd . "/"
+	endif
+
+	if len(heading) > winwidth(0)
+		let heading = substitute(s:pwd, $HOME, "~", "") . "/"
+
+		if len(heading) > winwidth(0)
+			let heading = s:GetShortPath(s:pwd) . "/"
+
+			if len(heading) > winwidth(0)
+				let heading = split(s:pwd, "/")[-1] . "/"
+			endif
+		endif
+	endif
+
+	" Convert the tree list into a formatted string with line breaks and indents
+	let output = [heading]
+
+	for q in g:tree
+		if s:show_hidden == 0 && s:IsHidden(q.path)
+			continue
+		endif
+
+		let indent = repeat(s:indent_marker, q.level + 1)
+		call add(output, indent . q.start . " " . q.name . q.link . q.end . " ")
+	endfor
+
+	return output
+endfunction
+
+" }}}
+" FUNCTION: filetree#Get(expr) {{{1
+function! filetree#Get(expr)
+	exec "return " . a:expr
+endfunction
+
+" }}}
+
+" ==============================================================================
+" Keyboard mapping functions
+" ==============================================================================
 " FUNCTION: filetree#Reload() {{{1
 function! filetree#Reload()
 	let g:tree = s:GenerateTree(s:pwd, 0)
-	call sidebar#Print(s:GetText())
+	call s:Print()
 endfunction
 
-
+" }}}
+" FUNCTION: filetree#Scroll(direction) {{{1
+function! filetree#Scroll(direction)
+	if a:direction == "up"
+		norm! k
+	else
+		norm! j
+	endif
+endfunction
+" }}}
 " FUNCTION: filetree#Activate() {{{1
 function! filetree#Activate()
-	let file = s:GetCursorFile()
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
 
-	let path = file.path
+	let path = g:tree[file_index].path
 
 	if s:GetProperty(path, "d")
-		call s:ToggleDirectory(s:GetIndex(path))
+		call s:ToggleDirectory(file_index)
 	endif
 
-	call sidebar#Print(s:GetText())
+	call s:Print()
 endfunction
 
+" }}}
 " FUNCTION: filetree#Open() {{{1
 function! filetree#Open()
-	let file = s:GetCursorFile()
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
 
-	let path = file.path
+	let path = g:tree[file_index].path
 
 	if s:GetProperty(path, "d")
 		call s:ChangeDirectory(path)
-		call sidebar#Print(s:GetText())
+		call s:Print()
 	else
-		wincmd l
+		wincmd p
 		exec "edit " . resolve(path)
 	endif
 endfunction
 
+" }}}
 " FUNCTION: filetree#DirShift(direction) {{{1
 function! filetree#DirShift(direction)
-	let file = s:GetCursorFile()
-	silent! let path = file.path
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	let path = g:tree[file_index].path
+
+	if file_index == -1
 		let path = s:pwd
 	endif
 
@@ -117,19 +233,19 @@ function! filetree#DirShift(direction)
 	endif
 
 	call s:ChangeDirectory(new_dir)
-	call sidebar#Print(s:GetText())
-	call s:CursorToFile(s:GetIndex(path))
-
+	call s:Print()
+	call cursor(s:GetLine(path), 1)
 endfunction
 
+" }}}
 " FUNCTION: filetree#DirMove(direction) {{{1
 function! filetree#DirMove(direction)
-	let file = s:GetCursorFile()
-	silent! let path = file.path
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
-	let index = s:GetIndex(path)
+
+	let path = g:tree[file_index].path
 
 	" If moving up a level (h)
 	if a:direction == "up"
@@ -148,65 +264,90 @@ function! filetree#DirMove(direction)
 		if opendir_index != -1
 			call s:ToggleDirectory(s:GetIndex(new_path))
 		endif
-		
-		call sidebar#Print(s:GetText())
-		call s:CursorToFile(s:GetIndex(new_path))
 
-	" If moving down a level (l)
+		call s:Print()
+		call cursor(s:GetLine(new_path), 1)
+
+		" If moving down a level (l)
 	elseif a:direction == "down"
 		if s:GetProperty(path, "d")
 			" If the directory is closed, open it
 			if index(g:opendirs, path) == -1
 				call s:ToggleDirectory(s:GetIndex(path))
-				call sidebar#Print(s:GetText())
+				call s:Print()
 			endif
-			
+
 			" If there are any files, go to the first one
-			if index != len(g:tree) - 1 && g:tree[index + 1].level > g:tree[index].level
+			if file_index != len(g:tree) - 1 && g:tree[file_index + 1].level > g:tree[file_index].level
 				norm j
 			endif
 		endif
 	endif
-
 endfunction
+
+" }}}
+" FUNCTION: filetree#ToggleHidden(value) {{{1
+function! filetree#ToggleHidden(value)
+	let path = g:tree[s:CursorIndex()].path
+	if a:value == 0
+		let s:show_hidden = 0
+	elseif a:value == 1
+		let s:show_hidden = 1
+	else
+		let s:show_hidden = !s:show_hidden
+	endif
+
+	call s:Print()
+	call cursor(s:GetLine(path), 1)
+endfunction
+
+" }}}
 
 " FUNCTION: filetree#AddFile(type) {{{1
 function! filetree#AddFile(type)
-	if a:type == 0
-		let type = confirm("What would you like to create? ", "&File\n&Directory")
+	if a:type == "f" || a:type == "file"
+		let type = 1
+	elseif a:type == "d" || a:type == "directory" || a:type == "dir"
+		let type = 2
 	else
-		let type = a:type
+		let type = confirm("What would you like to create? ", "&File\n&Directory")
 	endif
 
 	let name = input("New file name: ")
 	let dir = s:GetCursorDirectory()
 	let cmd = (type == 1) ? "touch" : "mkdir"
-	
+
 	exec "silent " . substitute("!" . cmd . " '" . dir . "/" . name . "'", "\n", "", "g")
+
 	call filetree#Reload()
 endfunction
 
+" }}}
 " FUNCTION: filetree#EditFile(cmd) {{{1
 function! filetree#EditFile(cmd)
-	let file = s:GetCursorFile()
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
-	
+
+	let path = g:tree[file_index].path
+
 	" Run the command specified, with <file> being the file path
-	let g:command = substitute(a:cmd, "<file>", "'" . file.path . "'", "g")
-	silent exec substitute(a:cmd, "<file>", "'" . file.path . "'", "g")
-	
+	let g:command = substitute(a:cmd, "<file>", "'" . path . "'", "g")
+	silent exec substitute(a:cmd, "<file>", "'" . path . "'", "g")
+
 	call filetree#Reload()
 endfunction
 
+" }}}
 " FUNCTION: filetree#DeleteFile() {{{1
 function! filetree#DeleteFile()
-	let file = s:GetCursorFile()
-	silent! let path = file.path
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file == -1
 		let path = s:pwd
 		let s:pwd = system("dirname '" . system("dirname '" . s:pwd . "'") . "'")
+	else
+		let path = g:tree[file_index].path
 	endif
 	let name = split(path, "/")[-1]
 
@@ -226,7 +367,7 @@ function! filetree#DeleteFile()
 	else
 		let confirmed = input("Deleting file '" . name . "'\n" . confirm_message)
 	endif
-	
+
 	if confirmed != "confirm"
 		return
 	endif
@@ -235,63 +376,77 @@ function! filetree#DeleteFile()
 	call filetree#Reload()
 endfunction
 
+" }}}
+" FUNCTION: filetree#RenameFile() {{{1
+function! filetree#RenameFile()
+	let file_index = s:CursorIndex()
+	if file_index == -1
+		return
+	endif
+
+	let path = g:tree[file_index].path
+
+	let dir_path = join(split(path, "/")[0:-2], "/")
+	if dir_path == ""
+		let dir_path = "/"
+	else
+		let dir_path = "/" . dir_path . "/"
+	endif
+
+	let new_name = input("New name: ")
+
+	if stridx(new_name, "/") != -1
+		echo "New name cannot contain a slash"
+	endif
+
+	silent exec "!mv '" . path . "' '" . dir_path . new_name . "'"
+
+	call filetree#Reload()
+endfunction
+
+" }}}
 " FUNCTION: filetree#MoveFile() {{{1
-function! filetree#DeleteFile()
-	let file = s:GetCursorFile()
-	silent! let path = file.path
-	silent! if file == 0
-		let path = s:pwd
-	endif
-	let name = split(path, "/")[-1]
-	
-	if confirmed != "confirm"
+function! filetree#MoveFile()
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
 
-	silent exec "!rm -rf '" . path . "'"
+	let path = g:tree[file_index].path
+
+	let new_path = input("New path: ")
+
+	silent exec "!mv '" . path . "' '" . new_path . "'"
+
 	call filetree#Reload()
 endfunction
 
+" }}}
 " FUNCTION: filetree#CopyFile() {{{1
-function! filetree#DeleteFile()
-	let file = s:GetCursorFile()
-	silent! let path = file.path
-	silent! if file == 0
-		let path = s:pwd
-	endif
-	let name = split(path, "/")[-1]
-
-	let confirm_message = "Type 'confirm' to delete it, or press <Esc> to cancel: " 
-
-	if s:GetProperty(path, "d")
-		let file_count = substitute(system("find '" . name . "' | wc -l"), "\n", "", "g")
-
-		if file_count == 0
-			let confirmed = input("Deleting directory '" . name . "'\n" . confirm_message)
-		elseif file_count == 1
-			let confirmed = input("Deleting directory '" . name . "' and 1 file\n" . confirm_message)
-		else
-			let confirmed = input("Deleting directory '" . name . "' and " . file_count . " files\n" . confirm_message)
-		endif
-
-	else
-		let confirmed = input("Deleting file '" . name . "'\n" . confirm_message)
-	endif
-	
-	if confirmed != "confirm"
+function! filetree#CopyFile()
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
 
-	silent exec "!rm -rf '" . path . "'"
+	let path = g:tree[file_index].path
+
+	let new_path = input("Path of copy: ")
+
+	silent exec "!cp -rf '" . path . "' '" . new_path . "'"
+
 	call filetree#Reload()
 endfunction
 
+" }}}
 " FUNCTION: filetree#GitFile(cmd) {{{1
 function! filetree#GitFile(cmd)
-	let file = s:GetCursorFile()
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return
 	endif
+
+	let path = g:tree[file_index].path
 
 	" Move to the parent directory of the file
 	let real_dir = getcwd()
@@ -299,10 +454,10 @@ function! filetree#GitFile(cmd)
 	exec "cd " . dir
 
 	if a:cmd == "add"
-		silent exec "!git add '" . file.path . "'"
+		silent exec "!git add '" . path . "'"
 	elseif a:cmd == "commit"
 		let commit_message = input("Commit Message: ")
-		silent exec "!git commit -m '" . commit_message . "'"
+		exec "!git commit -m '" . commit_message . "'"
 	elseif a:cmd == "ammend"
 		let last_commit = split(system("git log --oneline"), "\n")[0]
 		let last_message = last_commit[8:-1]
@@ -312,78 +467,27 @@ function! filetree#GitFile(cmd)
 
 	" Go back to the origional directory
 	exec "cd " . real_dir
-	
+
 	call filetree#Reload()
 endfunction
 
-" FUNCTION: filetree#ToggleHidden(value) {{{1
-function! filetree#ToggleHidden(value)
-	let path = s:GetCursorFile().path
-	if a:value == 0
-		let s:show_hidden = 0
-	elseif a:value == 1
-		let s:show_hidden = 1
-	else
-		let s:show_hidden = !s:show_hidden
-	endif
+" }}}
 
-	let g:tree = s:GenerateTree(s:pwd, 0)
-	call sidebar#Print(s:GetText())
-	call s:CursorToFile(s:GetIndex(path))
-endfunction
-
-" FUNCTION: filetree#Cd() {{{1
-function! filetree#Cd()
-	let dir = s:GetCursorDirectory()
-	call s:ChangeDirectory(dir)
-	let g:dir = dir
-	exec "cd " . dir
-	call filetree#Reload()
-endfunction
-
-" FUNCTION: filetree#Get(var) {{{1
-function! filetree#Get(var)
-	exec "return " . a:var
-endfunction
-
-" FUNCTION: s:GetText() {{{1
-function! s:GetText()
-	" Get the longest version of the heading that will fit in the window
-	let heading = s:pwd . "/"
-
-	if len(heading) > winwidth(0)
-		let heading = substitute(s:pwd, $HOME, "~", "") . "/"
-
-		if len(heading) > winwidth(0)
-			let heading = s:GetShortPath(s:pwd) . "/"
-
-			if len(heading) > winwidth(0)
-				let heading = split(s:pwd, "/")[-1] . "/"
-			endif
-		endif
-	endif
-
-	" Convert the tree list into a formatted string with line breaks and indents
-	let output = [heading]
-
-	for q in g:tree
-		let indent = repeat(s:indent_marker, q.level + 1)
-		call add(output, indent . q.start . " " . q.name . q.link . q.end . " ")
-	endfor
-
-	return output
-endfunction
-
+" ==============================================================================
+" Reference functions
+" ==============================================================================
 " FUNCTION: s:GenerateTree(dir, level) {{{1
+let g:myvar = {}
 function! s:GenerateTree(dir, level)
 	let new_tree = [] " Local variable storing the entire tree for the current level of the function
 
-	" Get the list of files
-	let cmd = "ls -Fv --group-directories-first" . (s:show_hidden ? " -A" : "")
+	" Setup steps to perform for the current directory {{{2
+	" Get the list of files in the current directory, and with link endings
+	let cmd = "ls -AFv --group-directories-first"
 	let files = split(system(cmd . " -L '" . a:dir . "' 2> /dev/null"), "\n")
 	let link_ending = split(system(cmd . " -H '" . a:dir . "' 2> /dev/null"), "\n")
-	
-	" Detect if the directory is a git directory
+
+	" Detect if the current directory is a git directory
 	let real_pwd = getcwd()
 	exec "cd " . a:dir
 
@@ -392,7 +496,7 @@ function! s:GenerateTree(dir, level)
 		let git_dir = ""
 	endif
 
-	" Get the directory with a slash on the end
+	" Get a prefix to add to the beginning of all of the files to represent their full path
 	let dir_prefix = (a:dir == "/") ? ("/") : (a:dir . "/")
 
 	" Get a list of open directories that are in the current directory
@@ -406,134 +510,147 @@ function! s:GenerateTree(dir, level)
 		endif
 	endfor
 
-	" Loop through each file in the specified directory {{{2
+	" }}}
+	" Loop through each file in the specified directory
 	for i in range(len(files))
-		let q = files[i]
+		let file = files[i]
+		let indicator = file[-1:-1]
 
 		" Create a new list for the current tree item
 		let new_item = {}
 		let new_item.level = a:level
 		let new_item.pwd = getcwd()
 
-		" Parse the different indicators for the file
-		let is_dir = 0
-		let indicator = q[-1:-1]
-		if indicator == "/"
-			let is_dir = 1
-			let new_item.name = q[0:-2]
-			let new_item.start = "▸  "
-			let new_item.end = "/"
-
-		elseif indicator == "*"
-			let new_item.name = q[0:-2]
-			let new_item.end = "*"
-
+		" Get the name of the file
+		if indicator == "*" || indicator == "/"
+			let new_item.name = file[0:-2]
+			let new_item.end = indicator
 		else
-			let new_item.name = q
+			let new_item.name = file
 			let new_item.end = ""
 		endif
-
-		" Set the path to the directory prefix + the file name
 		let new_item.path = dir_prefix . new_item.name
-		
-		" Show if a symbolic link
+
+		" Detect if file is a link
 		let new_item.link = ""
 		if link_ending[i][-1:-1] == "@"
-			if new_item.end == "/"
-				let new_item.start = substitute(new_item.start, "", "", "")
+			let new_item.link = " → " . s:GetShortPath(resolve(new_item.path))
+		endif
+
+		" Detect if the file is an open directory
+		let is_open_dir = 0
+		if indicator == "/"
+			if index(here_opendirs, new_item.path) != -1
+				let is_open_dir = 1
+			endif
+		endif
+
+		" Generate icons for each file {{{2
+		" If file is a regular file
+		if indicator != "/"
+			" Figure out the filetype icon
+			if new_item.link == ""
+				let file_icon = s:GetFiletypeIcon(new_item.name)
 			else
-				let new_item.start = "   "
+				let file_icon = s:file_icons.link
 			endif
-			let new_item.link = "@ → " . s:GetShortPath(resolve(new_item.path))
-		endif
 
-		" If the file doesn't already have an icon, figure out what it should be
-		if !has_key(new_item, "start") " If it is a hidden file
-			if new_item.name[0] == "."
-				let new_item.start = "  ﬒ "
-			else " If the file is not hidden
-				" Check if file has an extension
-				let extension = substitute(new_item.name, ".*\\.", "", "")
-				let extension = (extension == new_item.name) ? "" : extension
-				let new_item.start = "  " . s:GetIcon(extension) . " "
+			" Figure out git status
+			let git_icon = " "
+			if git_dir != ""
+				let git_status = system("git status -s '" . new_item.path . "'")
+				if git_status == ""
+					let git_icon = s:git_icons.committed
+				elseif git_status[1:1] == " "
+					let git_icon = s:git_icons.added
+				else
+					let git_icon = s:git_icons.modified
+				endif
 			endif
-		endif
 
-		if git_dir != "" && new_item.start[0:0] == " "
-			let git_status = system("git status -s '" . new_item.path . "'")
-			if git_status == ""
-				let git_icon = "✓"
-			elseif git_status[1:1] == " "
-				let git_icon = "✚"
+			" Set the starting string
+			let new_item.start = git_icon . " " . file_icon . " "
+			" If the file is a directory
+		else
+			if new_item.link == ""
+				let dir_icon = s:file_icons.dir
 			else
-				let git_icon = "✗"
+				let dir_icon = s:file_icons.dirlink
 			endif
-			let new_item.start = git_icon . new_item.start[1:-1]
-			let new_item.pwd = git_status
+
+			if is_open_dir
+				let new_item.start = "▾ " . dir_icon . " "
+			else
+				let new_item.start = "▸ " . dir_icon . " "
+			endif
 		endif
+		" }}}
 
-		" Add the current file to the tree
-		call add(new_tree, new_item) " Add the file to the tree variable
+		" Add the file to the new tree
+		call add(new_tree, new_item)
 
-		" Check if file is an open directory, and if so generate contents
-		if is_dir && index(here_opendirs, new_item.path) != -1
-			let new_tree[-1].start = substitute(new_tree[-1].start, "▸", "▾", "")
+		" Check if it is an open directory, and if so generate its contents
+		if is_open_dir
 			let subtree = s:GenerateTree(new_item.path, a:level + 1)
 			let new_tree = new_tree + subtree
 		endif
-		
-	endfor " }}}
-	
+
+	endfor
+
 	exec "cd " . real_pwd
 
 	return new_tree
 endfunction
 
-" FUNCTION: s:GetIcon(extension) {{{1
-function! s:GetIcon(extension)
-	let filetypes = []
-	call add(filetypes, ["", "", ""])
-	call add(filetypes, ["", "", "zip", "tar", "gz", "xz", "bz2"])
-	call add(filetypes, ["", "", "txt", "doc", "docx"])
-	call add(filetypes, ["", "", "sh", "bash", "zsh", "fish"])
-	call add(filetypes, ["", "", "png", "jpg", "jpeg", "gif"])
-	call add(filetypes, ["", "", "mp4", "mov", "wmv", "webm"])
-	call add(filetypes, ["", "", "mp3", "wav", "flac"])
-	call add(filetypes, ["", "", "pdf"])
-	call add(filetypes, ["", "", "vim"])
-
-	" Set which type of icon to use (0=empty 1=full)
-	let icon_type = 1
-
-	" Go through list of extensions and match appropriate starting icon
-	for q in filetypes
-		for i in range(2, len(q) - 1)
-			if q[i] == a:extension
-				return q[icon_type]
-			endif
-		endfor
-	endfor
-
-	return filetypes[0][icon_type]
-endfunction
-
-" FUNCTION: s:GetCursorFile() {{{1
-function! s:GetCursorFile()
-	if line(".") < s:first_line
-		return 0
+" }}}
+" FUNCTION: s:GetFiletypeIcon(file) {{{1
+function! s:GetFiletypeIcon(file)
+	let file_split = split(a:file, "\\.")
+	if len(file_split) <= 1
+		return s:file_icons.file
 	endif
-	
-	return g:tree[line(".") - s:first_line]
+
+	let extension = file_split[-1]
+
+	if has_key(s:type_icons, extension)
+		return s:type_icons[extension]
+	else
+		return s:file_icons.file
+	endif
+endfunction
+" }}}
+" FUNCTION: s:CursorIndex() {{{1
+function! s:CursorIndex()
+	let line = line(".") - s:first_line
+	if line(".") < 0
+		return -1
+	endif
+
+	if s:show_hidden == 1
+		return line
+	endif
+
+	let count = 0
+	let index = 0
+	while count <= line
+		if !s:IsHidden(g:tree[index].path)
+			let count += 1
+		endif
+		let index += 1
+	endwhile
+
+	return index - 1
 endfunction
 
+" }}}
 " FUNCTION: s:GetCursorDirectory() {{{1
 function! s:GetCursorDirectory()
-	let file = s:GetCursorFile()
-	silent! if file == 0
+	let file_index = s:CursorIndex()
+	if file_index == -1
 		return s:pwd
 	endif
-	
-	let path = s:GetCursorFile().path
+
+	let path = g:tree[file_index].path
 	if s:GetProperty(path, "d") == 1
 		return path
 	else
@@ -541,6 +658,52 @@ function! s:GetCursorDirectory()
 	endif
 endfunction
 
+" }}}
+" FUNCTION: s:GetIndex(path) {{{1
+function! s:GetIndex(path)
+	let index = 0
+	for q in g:tree
+		if q.path == a:path
+			return index
+		endif
+
+		let index += 1
+	endfor
+
+	return s:first_line
+endfunction
+
+" }}}
+" FUNCTION: s:GetLine(path) {{{1
+function! s:GetLine(path)
+	let index = 0
+	for q in g:tree
+		if q.path == a:path
+			return index + s:first_line
+		endif
+
+		if s:show_hidden || !s:IsHidden(q.path)
+			let index += 1
+		endif
+	endfor
+
+	return s:first_line
+endfunction
+
+" }}}
+" FUNCTION: s:IsHidden(path) {{{1
+function! s:IsHidden(path)
+	let path_split = split(a:path, "/")
+	for q in path_split
+		if q[0:0] == "."
+			return 1
+		endif
+	endfor
+	
+	return 0
+endfunction
+
+" }}}
 " FUNCTION: s:GetInsertedTree(subtree, index) {{{1
 function! s:GetInsertedTree(tree, subtree, index)
 	let tree_len = len(a:tree)
@@ -551,16 +714,19 @@ function! s:GetInsertedTree(tree, subtree, index)
 	endif
 endfunction
 
+" }}}
 " FUNCTION: s:GetParent(path) {{{1
 function! s:GetParent(path)
 	return split(system("dirname '" . a:path . "'"), "\n")[0]
 endfunction
 
+" }}}
 " FUNCTION: s:GetProperty(path, property) {{{1
 function! s:GetProperty(path, property)
 	return system("[[ -" . a:property . " '" . a:path . "' ]] && echo 1")
 endfunction
 
+" }}}
 " FUNCTION: s:GetShortPath(path) {{{1
 function! s:GetShortPath(path)
 	" Replace the beginning with ~ if it is in the home directory
@@ -571,36 +737,28 @@ function! s:GetShortPath(path)
 	endif
 
 	let split = split(long_path, "/")
-	
+
 	" Return the origional path if it is in the root directory
 	if len(split) <= 1
 		return a:path
 	endif
-	
+
 	" Convert the split into a short path
 	let new_path = ""
 	for i in range(len(split) - 1)
 		let new_path .= split[i][0:0] . "/"
 	endfor
 	let new_path .= split[-1]
-	
+
 	if new_path[0:0] != "~"
 		let new_path = "/" . new_path
 	endif
-	
+
 	return new_path
 endfunction
 
-" FUNCTION: s:GetIndex(path) {{{1
-function! s:GetIndex(path)
-	for i in range(len(g:tree))
-		if g:tree[i].path == a:path
-			return i
-		endif
-	endfor
-endfunction
-
-" FUNCTION! s:SetOpen(file, to_open) {{{1
+" }}}
+" FUNCTION: s:SetOpen(file, to_open) {{{1
 function! s:SetOpen(index, to_open)
 	let path = g:tree[a:index].path
 	let index = index(g:opendirs, path)
@@ -609,7 +767,7 @@ function! s:SetOpen(index, to_open)
 		if index == -1
 			call add(g:opendirs, path)
 		endif
-			
+
 	else
 		let g:tree[a:index].start = substitute(g:tree[a:index].start, "▾", "▸", "")
 		if index != -1
@@ -618,14 +776,8 @@ function! s:SetOpen(index, to_open)
 	endif
 endfunction
 
-" FUNCTION: s:CursorToFile(index) {{{1
-function! s:CursorToFile(index)
-	call cursor(a:index + s:first_line, 0)
-	
-	silent exec "norm! $?" . s:indent_marker . "*"
-endfunction
-
-" FUNCTION: s:ToggleDirectory(dir) {{{1
+" }}}
+" FUNCTION: s:ToggleDirectory(index) {{{1
 function! s:ToggleDirectory(index)
 	let path = g:tree[a:index].path
 	if s:GetProperty(path, "f")
@@ -651,7 +803,7 @@ function! s:ToggleDirectory(index)
 		while end_index + 1 < len(g:tree) && g:tree[end_index + 1].level > level
 			let end_index += 1
 		endwhile
-		
+
 		if end_index == len(g:tree) - 1
 			let g:tree = g:tree[0:(a:index)]
 		else
@@ -660,14 +812,16 @@ function! s:ToggleDirectory(index)
 	endif
 endfunction
 
+" }}}
 " FUNCTION: s:ChangeDirectory(dir) {{{1
 function! s:ChangeDirectory(dir)
-	let g:dir = a:dir
 	if s:GetProperty(a:dir, "f")
 		return "Not a directory"
 	endif
 
+	exec "cd " . a:dir
 	let s:pwd = a:dir
 	let g:tree = s:GenerateTree(a:dir, 0)
 endfunction
 
+" }}}
