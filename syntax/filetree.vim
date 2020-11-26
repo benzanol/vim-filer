@@ -2,6 +2,7 @@
 syn match FiletreeDirectory "[^→]*\/\s$"
 syn match FiletreeExecutable "[^→]*\*\s$"
 syn match FiletreePwd "^[/~].*/$"
+syn match FiletreePwd "^/$"
 
 syn match FiletreeRedirect ".*→ "
 syn match FiletreeGitCommitted "✓"
@@ -20,7 +21,7 @@ exec "hi FiletreeIndent ctermfg=" . grey.fg . " guifg=" . grey.bg
 exec "hi FiletreeDirectory ctermfg=" . red.fg . " guifg=" . red.bg
 exec "hi FiletreeRedirect ctermfg=" . g:purple.fg . " guifg=" . g:purple.bg
 exec "hi FiletreeExecutable ctermfg=" . green.fg . " guifg=" . green.bg
-exec "hi FiletreePwd ctermfg=" . red.fg . " guifg=" . red.bg
+exec "hi FiletreePwd ctermfg=" . red.fg . " guifg=" . red.bg . " cterm=bold gui=bold"
 
 hi FiletreeGitCommitted ctermfg=82  guifg=#5FFF00 cterm=bold gui=bold
 hi FiletreeGitAdded ctermfg=75  guifg=#5FAFFF cterm=bold gui=bold

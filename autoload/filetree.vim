@@ -23,7 +23,7 @@ endfunction
 " FUNCTION: s:InitializeMappings() {{{1
 function! s:InitializeMappings()
 	let s:mappings = {}
-	let s:mappings["<CR>"] = "NavigateTo()"
+	let s:mappings["<CR>"] = "Edit()"
 	let s:mappings["."] = "ShowHidden(-1)"
 	let s:mappings.v = "ShowInfo()"
 
@@ -34,11 +34,16 @@ function! s:InitializeMappings()
 	let s:mappings.r  = "Reload()"
 	let s:mappings.k  = "Scroll('up')"
 	let s:mappings.j  = "Scroll('down')"
-	let s:mappings.u  = "DirShift('up')"
-	let s:mappings.U  = "DirShift('down')"
 	let s:mappings.h  = "DirMove('up')"
 	let s:mappings.l  = "DirMove('down')"
-	
+	let s:mappings.H  = "DirShift('up')"
+	let s:mappings.L  = "DirShift('down')"
+
+	let s:mappings["~"] = "NavigateTo('~')"
+	let s:mappings.th = "NavigateTo('~')"
+	let s:mappings.tr = "NavigateTo('/')"
+	let s:mappings.u = "NavigateTo('..')"
+
 	let s:mappings.a  = "AddFile(' ')"
 	let s:mappings.af = "AddFile('f')"
 	let s:mappings.ad = "AddFile('d')"
@@ -49,9 +54,10 @@ function! s:InitializeMappings()
 	let s:mappings.fm = "MoveFile()"
 	let s:mappings.fc = "CopyFile()"
 
-	let s:mappings.ga = "GitFile('add')"
-	let s:mappings.gc = "GitFile('commit')"
-	let s:mappings.gC = "GitFile('ammend')"
+	let s:mappings.ga = "GitCmd('add')"
+	let s:mappings.gc = "GitCmd('commit')"
+	let s:mappings.gC = "GitCmd('ammend')"
+	let s:mappings.gl = "GitCmd('log')"
 
 	let g:sidebars.filetree.mappings = s:mappings
 endfunction
@@ -84,6 +90,8 @@ function! s:InitializeIcons()
 	call add(s:file_categories, {"type":"file",    "outline":"", "filled":""})
 	call add(s:file_categories, {"type":"link",    "outline":"", "filled":""})
 	call add(s:file_categories, {"type":"hidden",  "outline":"﬒", "filled":"﬒"})
+	call add(s:file_categories, {"type":"closed",  "outline":"▸", "filled":"▸"})
+	call add(s:file_categories, {"type":"open",    "outline":"▾", "filled":"▾"})
 
 	let s:file_icons = {}
 	for q in s:file_categories
@@ -98,12 +106,6 @@ function! s:InitializeIcons()
 endfunction
 " }}}
 
-" FUNCTION: s:Print() {{{1
-function! s:Print()
-	call sidebar#Print(s:GetText())
-endfunction
-
-" }}}
 " FUNCTION: s:GetText() {{{1
 function! s:GetText()
 	" Get the longest version of the heading that will fit in the window
@@ -141,6 +143,13 @@ function! s:GetText()
 endfunction
 
 " }}}
+" FUNCTION: s:Print() {{{1
+function! s:Print()
+	call sidebar#Print(s:GetText())
+endfunction
+
+" }}}
+
 " FUNCTION: filetree#Get(expr) {{{1
 function! filetree#Get(expr)
 	exec "return " . a:expr
@@ -167,8 +176,8 @@ function! filetree#Scroll(direction)
 	endif
 endfunction
 " }}}
-" FUNCTION: filetree#NavigateTo() {{{1
-function! filetree#NavigateTo()
+" FUNCTION: filetree#Edit() {{{1
+function! filetree#Edit()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
@@ -196,7 +205,11 @@ function! filetree#Open()
 	endif
 
 	if s:GetProperty(path, "d")
-		call s:ToggleDirectory(file_index)
+		if g:tree[file_index].open
+			call s:CloseDirectory(file_index)
+		else
+			call s:OpenDirectory(file_index)
+		endif
 	else
 		call s:ViewFile(path)
 	endif
@@ -212,15 +225,17 @@ function! filetree#OpenAll()
 		let dir_list = []
 		let any_closed = 0
 
-		for q in g:tree
+		for i in range(len(g:tree))
+			let q = g:tree[i]
+
 			if q.level == level && q.end == "/"
-				call add(dir_list, q)
+				call add(dir_list, i)
 				if q.open == 0
 					let any_closed = 1
 				endif
 			endif
 		endfor
-		
+
 		if len(dir_list) == 0
 			return
 		elseif any_closed == 0
@@ -228,12 +243,10 @@ function! filetree#OpenAll()
 			continue
 		else
 			for q in dir_list
-				if !q.open
-					call add(g:opendirs, q.path)
-				endif
+				call s:OpenDirectory(q)
 			endfor
-			
-			call filetree#Reload()
+
+			call s:Print()
 			return
 		endif
 	endwhile
@@ -295,21 +308,17 @@ function! filetree#DirMove(direction)
 
 	" If moving up a level (h)
 	if a:direction == "up"
-		let new_path = s:GetParent(path)
-		let g:npath = new_path
+		let new_path = "/" . join(split(path, "/")[0:-2], "/")
 
 		if new_path == s:pwd
 			return
 			" Remove return statement to go up a directory when in top level
-			let new_pwd = s:GetParent(new_path)
+			let new_pwd = "/" . join(split(new_path, "/")[0:-2], "/")
 			call s:ChangeDirectory(new_pwd)
 		endif
 
 		" Close the directory
-		let opendir_index = index(g:opendirs, new_path)
-		if opendir_index != -1
-			call s:ToggleDirectory(s:GetIndex(new_path))
-		endif
+		call s:CloseDirectory(s:GetIndex(new_path))
 
 		call s:Print()
 		call cursor(s:GetLine(new_path), 1)
@@ -319,7 +328,7 @@ function! filetree#DirMove(direction)
 		if s:GetProperty(path, "d")
 			" If the directory is closed, open it
 			if index(g:opendirs, path) == -1
-				call s:ToggleDirectory(s:GetIndex(path))
+				call s:OpenDirectory(s:GetIndex(path))
 				call s:Print()
 			endif
 
@@ -339,17 +348,17 @@ function! filetree#ShowInfo()
 
 	" Create a string with the path at the top to display
 	let info = path . "\n"
-	
+
 	" Detect if it is a link and show the redirect path
 	let redirect = system("readlink '" . path . "' 2> /dev/null")
 	if redirect != ""
 		let info .= "Redirects to: " . redirect
 	endif
-	
+
 	" Get the file type, and if it is a normal file get its size
 	let type = system("stat -c %F '" . path . "' 2> /dev/null")
 	let info .= "File Type: " . substitute(type, "^.", "\\u&", "g")
-	
+
 	" Get the file size, or the size of the contents of a directory
 	let size = split(system("du -sh '" . real_path . "' 2> /dev/null"), "	")[0]
 	if type[0:2] == "dir" || type[0:2] == "sym"
@@ -357,7 +366,7 @@ function! filetree#ShowInfo()
 	else
 		let info .= "File Size: " . size . "\n"
 	endif
-	
+
 	" Get other miscellaneous info
 	let info .= "Created: " . system("stat -c %w '" . path . "' 2> /dev/null")
 	let info .= "Owner: " . system("stat -c %U '" . path . "' 2> /dev/null")
@@ -379,6 +388,40 @@ function! filetree#ShowHidden(value)
 
 	call s:Print()
 	call cursor(s:GetLine(path), 1)
+endfunction
+
+" }}}
+" FUNCTION: filetree#NavigateTo(dir) {{{1
+function! filetree#NavigateTo(dir)
+	let g:opendirs = []
+	let old_path = s:pwd
+
+	if a:dir == ".."
+		let path = "/" . join(split(s:pwd, "/")[0:-2], "/")
+	else
+		let path = expand(a:dir)
+	endif
+
+	call s:ChangeDirectory(path)
+	call s:Print()
+	
+	" Detect if the old path is in the current path, and if so got to its folder
+	let old_split = split(old_path, "/")
+	let new_split = split(path, "/")
+	let level = len(new_split) - 1
+
+	let folder = ""
+	if level == -1
+		let folder = "/" . old_split[0]
+	elseif len(old_split) - 1 > level && old_split[0:level] == new_split
+		let folder = "/" . join(old_split[0:level + 1], "/")
+	endif
+	
+	if folder == ""
+		call cursor(s:first_line, 1)
+	else
+		call cursor(s:GetLine(folder), 1)
+	endif
 endfunction
 
 " }}}
@@ -411,7 +454,7 @@ function! filetree#SetExecutable(value)
 	else
 		let path = g:tree[file_index].path
 	endif
-	
+
 	if a:value == 0
 		silent exec "!chmod -x '" . path . "'"
 		let g:tree[file_index].end = ""
@@ -424,7 +467,7 @@ function! filetree#SetExecutable(value)
 			let g:tree[file_index].end = ""
 		else
 			silent exec "!chmod +x '" . path . "'"
-		let g:tree[file_index].end = "*"
+			let g:tree[file_index].end = "*"
 		endif
 	endif
 
@@ -445,7 +488,9 @@ function! filetree#DeleteFile()
 
 	let confirm_message = "Type 'confirm' to delete it, or press <Esc> to cancel: " 
 
-	if s:GetProperty(path, "d")
+	if s:GetProperty(path, "L")
+		let confirmed = input("Deleting link '" . name . "'\n" . confirm_message)
+	elseif s:GetProperty(path, "d")
 		let file_count = substitute(system("find '" . name . "' | wc -l"), "\n", "", "g")
 
 		if file_count == 0
@@ -465,7 +510,9 @@ function! filetree#DeleteFile()
 	endif
 
 	silent exec "!rm -rf '" . path . "'"
-	call filetree#Reload()
+
+	call remove(g:tree, s:GetIndex(path))
+	call s:Print()
 endfunction
 
 " }}}
@@ -531,8 +578,8 @@ function! filetree#CopyFile()
 endfunction
 
 " }}}
-" FUNCTION: filetree#GitFile(cmd) {{{1
-function! filetree#GitFile(cmd)
+" FUNCTION: filetree#GitCmd(cmd) {{{1
+function! filetree#GitCmd(cmd)
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
@@ -547,14 +594,20 @@ function! filetree#GitFile(cmd)
 
 	if a:cmd == "add"
 		silent exec "!git add '" . path . "'"
+
 	elseif a:cmd == "commit"
 		let commit_message = input("Commit Message: ")
 		exec "!git commit -m '" . commit_message . "'"
+
 	elseif a:cmd == "ammend"
 		let last_commit = split(system("git log --oneline"), "\n")[0]
 		let last_message = last_commit[8:-1]
 		let commit_message = input("Ammended Commit Message: ", last_message)
 		silent exec "!git commit --amend -m '" . commit_message . "'"
+
+	elseif a:cmd == "log"
+		let output = system("git log --oneline")
+		echo output
 	endif
 
 	" Go back to the origional directory
@@ -573,7 +626,6 @@ let g:myvar = {}
 function! s:GenerateTree(dir, level)
 	let new_tree = [] " Local variable storing the entire tree for the current level of the function
 
-	" Setup steps to perform for the current directory {{{2
 	" Get the list of files in the current directory, and with link endings
 	let cmd = "ls -AFv --group-directories-first"
 	let files = split(system(cmd . " -L '" . a:dir . "' 2> /dev/null"), "\n")
@@ -602,7 +654,6 @@ function! s:GenerateTree(dir, level)
 		endif
 	endfor
 
-	" }}}
 	" Loop through each file in the specified directory
 	for i in range(len(files))
 		let file = files[i]
@@ -637,9 +688,8 @@ function! s:GenerateTree(dir, level)
 			endif
 		endif
 
-		" Generate icons for each file {{{2
-		" If file is a regular file
-		if indicator != "/"
+		" Generate icons for each file
+		if indicator != "/" " If the file is a regular file
 			" Figure out the filetype icon
 			if new_item.link == ""
 				let file_icon = s:GetFiletypeIcon(new_item.name)
@@ -647,7 +697,7 @@ function! s:GenerateTree(dir, level)
 				let file_icon = s:file_icons.link
 			endif
 
-			" Figure out git status
+			" Figure out the file's git status
 			let git_icon = " "
 			if git_dir != ""
 				let git_status = system("git status -s '" . new_item.path . "'")
@@ -662,8 +712,8 @@ function! s:GenerateTree(dir, level)
 
 			" Set the starting string
 			let new_item.start = git_icon . " " . file_icon . " "
-			" If the file is a directory
-		else
+
+		else " If the file is a directory
 			if new_item.link == ""
 				let dir_icon = s:file_icons.dir
 			else
@@ -671,14 +721,13 @@ function! s:GenerateTree(dir, level)
 			endif
 
 			if is_open_dir
-				let new_item.start = "▾ " . dir_icon . " "
+				let new_item.start = s:file_icons.open . " " . dir_icon . " "
 				let new_item.open = 1
 			else
-				let new_item.start = "▸ " . dir_icon . " "
+				let new_item.start = s:file_icons.closed . " " . dir_icon . " "
 				let new_item.open = 0
 			endif
 		endif
-		" }}}
 
 		" Add the file to the new tree
 		call add(new_tree, new_item)
@@ -798,23 +847,6 @@ function! s:IsHidden(path)
 endfunction
 
 " }}}
-" FUNCTION: s:GetInsertedTree(subtree, index) {{{1
-function! s:GetInsertedTree(tree, subtree, index)
-	let tree_len = len(a:tree)
-	if a:index < tree_len - 1
-		return a:tree[0:(a:index)] + a:subtree + a:tree[(a:index + 1):-1]
-	else
-		return a:tree + a:subtree
-	endif
-endfunction
-
-" }}}
-" FUNCTION: s:GetParent(path) {{{1
-function! s:GetParent(path)
-	return split(system("dirname '" . a:path . "'"), "\n")[0]
-endfunction
-
-" }}}
 " FUNCTION: s:GetProperty(path, property) {{{1
 function! s:GetProperty(path, property)
 	return system("[[ -" . a:property . " '" . a:path . "' ]] && echo 1")
@@ -852,61 +884,6 @@ function! s:GetShortPath(path)
 endfunction
 
 " }}}
-" FUNCTION: s:SetOpen(file, to_open) {{{1
-function! s:SetOpen(index, to_open)
-	let path = g:tree[a:index].path
-	let index = index(g:opendirs, path)
-	if a:to_open
-		let g:tree[a:index].start = substitute(g:tree[a:index].start, "▸", "▾", "")
-		if index == -1
-			call add(g:opendirs, path)
-		endif
-
-	else
-		let g:tree[a:index].start = substitute(g:tree[a:index].start, "▾", "▸", "")
-		if index != -1
-			call remove(g:opendirs, index)
-		endif
-	endif
-endfunction
-
-" }}}
-" FUNCTION: s:ToggleDirectory(index) {{{1
-function! s:ToggleDirectory(index)
-	let path = g:tree[a:index].path
-	if s:GetProperty(path, "f")
-		return "Not a directory"
-	endif
-
-	let opendir_index = index(g:opendirs, path)
-	let level = g:tree[a:index].level
-
-	if opendir_index == -1
-		call s:SetOpen(a:index, 1)
-		let subtree = s:GenerateTree(path, level + 1)
-		let g:tree = s:GetInsertedTree(g:tree, subtree, a:index) 
-
-	else
-		call s:SetOpen(a:index, 0)
-
-		let end_index = a:index + 1
-		if g:tree[end_index].level <= level
-			return
-		endif
-
-		while end_index + 1 < len(g:tree) && g:tree[end_index + 1].level > level
-			let end_index += 1
-		endwhile
-
-		if end_index == len(g:tree) - 1
-			let g:tree = g:tree[0:(a:index)]
-		else
-			let g:tree = g:tree[0:(a:index)] + g:tree[end_index + 1:-1]
-		endif
-	endif
-endfunction
-
-" }}}
 " FUNCTION: s:ChangeDirectory(dir) {{{1
 function! s:ChangeDirectory(dir)
 	if s:GetProperty(a:dir, "f")
@@ -916,6 +893,75 @@ function! s:ChangeDirectory(dir)
 	exec "cd " . a:dir
 	let s:pwd = a:dir
 	let g:tree = s:GenerateTree(a:dir, 0)
+endfunction
+
+" }}}
+" FUNCTION: s:OpenDirectory(index) {{{1
+function! s:OpenDirectory(index)
+	let path = g:tree[a:index].path
+
+	" Cancel the function if it isn't a directory, or if it's already open
+	let opendir_index = index(g:opendirs, path)
+	if s:GetProperty(path, "f") || opendir_index != -1
+		return
+	endif
+
+	" Mark the file as open and add it to the list of open directories
+	let g:tree[a:index].open = 1
+	call add(g:opendirs, path)
+
+	" Change the icon to show that the directory is open
+	let g:tree[a:index].start = substitute(g:tree[a:index].start, s:file_icons.closed, s:file_icons.open, "")
+
+	" Add the contents of the directory to the tree
+	let subtree = s:GenerateTree(path, g:tree[a:index].level + 1)
+	let tree_len = len(g:tree)
+	if a:index < tree_len - 1
+		let g:tree = g:tree[0:(a:index)] + subtree + g:tree[(a:index + 1):-1]
+	else
+		let g:tree = g:tree + subtree
+	endif
+endfunction
+
+" }}}
+" FUNCTION: s:CloseDirectory(index) {{{1
+function! s:CloseDirectory(index)
+	let path = g:tree[a:index].path
+
+	" Cancel the function if it isn't a directory, or if it's already open
+	let opendir_index = index(g:opendirs, path)
+	if s:GetProperty(path, "f") || opendir_index == -1
+		return
+	endif
+
+	" Mark the file as closed, and remove it from the list of open directories
+	let g:tree[a:index].open = 0
+	call remove(g:opendirs, opendir_index)
+	
+	" Change the icon to show that the directory is closed
+	let g:tree[a:index].start = substitute(g:tree[a:index].start, s:file_icons.open, s:file_icons.closed, "")
+
+	let opendir_index = index(g:opendirs, path)
+	if opendir_index != -1
+		call remove(g:opendirs, opendir_index)
+	endif
+
+	" Remove the contents of the directory from the tree
+	let level = g:tree[a:index].level
+	let end_index = a:index + 1
+	if g:tree[end_index].level <= level
+		return
+	endif
+
+	while end_index + 1 < len(g:tree) && g:tree[end_index + 1].level > level
+		let end_index += 1
+	endwhile
+
+	if end_index == len(g:tree) - 1
+		let g:tree = g:tree[0:(a:index)]
+	else
+		let g:tree = g:tree[0:(a:index)] + g:tree[end_index + 1:-1]
+	endif
 endfunction
 
 " }}}
