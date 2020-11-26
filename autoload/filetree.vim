@@ -9,7 +9,7 @@ let g:filetree = {}
 " FUNCTION: filetree#Initialize() {{{1
 function! filetree#Initialize()
 	" Get global options
-	let s:icon_type = has_key(g:filetree, "icon_type") ? g:filetree.icon_type : "unicode"
+	let s:icon_type = has_key(g:filetree, "icon_type") ? g:filetree.icon_type : "filled"
 
 	" Local variables
 	let s:pwd = getcwd()
@@ -952,11 +952,6 @@ function! s:CloseDirectory(index)
 
 	" Change the icon to show that the directory is closed
 	let s:tree[a:index].start = substitute(s:tree[a:index].start, s:icons.f_open, s:icons.f_closed, "")
-
-	let opendir_index = index(s:opendirs, path)
-	if opendir_index != -1
-		call remove(s:opendirs, opendir_index)
-	endif
 
 	" Remove the contents of the directory from the tree
 	let level = s:tree[a:index].level
