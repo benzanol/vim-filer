@@ -23,10 +23,13 @@ endfunction
 " FUNCTION: s:InitializeMappings() {{{1
 function! s:InitializeMappings()
 	let s:mappings = {}
-	let s:mappings["<Space>"] = "ShowContents()"
-	let s:mappings["<CR>"] = "Open()"
+	let s:mappings["<CR>"] = "NavigateTo()"
 	let s:mappings["."] = "ShowHidden(-1)"
 	let s:mappings.v = "ShowInfo()"
+
+	let s:mappings["<Space>"] = "Open()"
+	let s:mappings.o = "OpenAll()"
+	let s:mappings.O = "CloseAll()"
 
 	let s:mappings.r  = "Reload()"
 	let s:mappings.k  = "Scroll('up')"
@@ -164,8 +167,27 @@ function! filetree#Scroll(direction)
 	endif
 endfunction
 " }}}
-" FUNCTION: filetree#ShowContents() {{{1
-function! filetree#ShowContents()
+" FUNCTION: filetree#NavigateTo() {{{1
+function! filetree#NavigateTo()
+	let file_index = s:CursorIndex()
+	if file_index == -1
+		return
+	else
+		let path = g:tree[file_index].path
+	endif
+
+	if s:GetProperty(path, "d")
+		call s:ChangeDirectory(path)
+		call s:Print()
+	else
+		wincmd p
+		exec "edit " . resolve(path)
+	endif
+endfunction
+
+" }}}
+" FUNCTION: filetree#Open() {{{1
+function! filetree#Open()
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
@@ -183,22 +205,45 @@ function! filetree#ShowContents()
 endfunction
 
 " }}}
-" FUNCTION: filetree#Open() {{{1
-function! filetree#Open()
-	let file_index = s:CursorIndex()
-	if file_index == -1
-		return
-	else
-		let path = g:tree[file_index].path
-	endif
+" FUNCTION: filetree#OpenAll() {{{1
+function! filetree#OpenAll()
+	let level = 0
+	while 1
+		let dir_list = []
+		let any_closed = 0
 
-	if s:GetProperty(path, "d")
-		call s:ChangeDirectory(path)
-		call s:Print()
-	else
-		wincmd p
-		exec "edit " . resolve(path)
-	endif
+		for q in g:tree
+			if q.level == level && q.end == "/"
+				call add(dir_list, q)
+				if q.open == 0
+					let any_closed = 1
+				endif
+			endif
+		endfor
+		
+		if len(dir_list) == 0
+			return
+		elseif any_closed == 0
+			let level += 1
+			continue
+		else
+			for q in dir_list
+				if !q.open
+					call add(g:opendirs, q.path)
+				endif
+			endfor
+			
+			call filetree#Reload()
+			return
+		endif
+	endwhile
+endfunction
+
+" }}}
+" FUNCTION: filetree#CloseAll() {{{1
+function! filetree#CloseAll()
+	let g:opendirs = []
+	call filetree#Reload()
 endfunction
 
 " }}}
@@ -627,8 +672,10 @@ function! s:GenerateTree(dir, level)
 
 			if is_open_dir
 				let new_item.start = "▾ " . dir_icon . " "
+				let new_item.open = 1
 			else
 				let new_item.start = "▸ " . dir_icon . " "
+				let new_item.open = 0
 			endif
 		endif
 		" }}}
