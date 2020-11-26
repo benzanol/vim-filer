@@ -2,12 +2,13 @@
 let s:i = g:filetree.icons
 
 " Match regexes to color groups
-exec "syn match FiletreeDirectory '[^" . s:i.f_redirect . "]*\\/\\s*$'"
+"exec "syn match FiletreeDirectory '[^" . s:i.f_redirect . "]*\\/\\s*$'"
+exec "syn match FiletreeDirectory '.*\/\s*$'"
 exec "syn match FiletreeExecutable '\\w[^" . s:i.f_redirect . "]*\\*\s*$'"
 syn match FiletreePwd "^[/~].*/$"
 syn match FiletreePwd "^/$"
 
-exec "syn match FiletreeRedirect '.*" . s:i.f_redirect . " '"
+" exec "syn match FiletreeRedirect '.*" . s:i.f_redirect . " '"
 exec "syn match FiletreeGitCommitted '" . s:i.g_committed . "'"
 exec "syn match FiletreeGitAdded '" . s:i.g_added . "'"
 exec "syn match FiletreeGitModified '" . s:i.g_modified . "'"

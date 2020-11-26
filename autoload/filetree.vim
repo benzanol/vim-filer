@@ -60,8 +60,9 @@ function! s:InitializeMappings()
 	let s:mappings.fx = "SetExecutable(-1)"
 	let s:mappings.fd = "DeleteFile()"
 	let s:mappings.fr = "RenameFile()"
-	let s:mappings.fm = "MoveFile()"
-	let s:mappings.fc = "CopyFile()"
+	let s:mappings.fm = "MoveFile('move')"
+	let s:mappings.fc = "MoveFile('copy')"
+	let s:mappings.fl = "MoveFile('link')"
 
 	let s:mappings.ga = "GitCmd('add')"
 	let s:mappings.gc = "GitCmd('commit')"
@@ -410,6 +411,10 @@ function! filetree#NavigateTo(dir)
 	let old_path = s:pwd
 
 	if a:dir == ".."
+		if s:pwd == "/"
+			return
+		endif
+
 		let path = "/" . join(split(s:pwd, "/")[0:-2], "/")
 	else
 		let path = expand(a:dir)
@@ -557,36 +562,39 @@ function! filetree#RenameFile()
 endfunction
 
 " }}}
-" FUNCTION: filetree#MoveFile() {{{1
-function! filetree#MoveFile()
+" FUNCTION: filetree#MoveFile(action) {{{1
+function! filetree#MoveFile(action)
 	let file_index = s:CursorIndex()
 	if file_index == -1
 		return
 	else
 		let path = s:tree[file_index].path
 	endif
-
-	let new_path = input("New path: ")
-
-	silent exec "!mv '" . path . "' '" . new_path . "'"
-
-	call filetree#Reload()
+	
+	if a:action == "copy"
+		let statement = "Navigate to the folder where you want to create the copy"
+		let prompt = "Path of copy: "
+		let command = "cp -r"
+	elseif a:action == "link"
+		let statement = "Navigate to the folder where you want to create the link"
+		let prompt = "Path of link: "
+		let command = "ln -s"
+	else
+		let statement = "Navigate to the folder where you want to move the file"
+		let prompt = "New path: "
+		let command = "mv"
+	endif
+	
+	echo statement . ", and press x to select it"
+	exec "noremap <buffer> <silent> <nowait> x :call filetree#ConfirmMove('" . path . "', '" . command . "', '" . prompt . "')<CR>"
 endfunction
 
-" }}}
-" FUNCTION: filetree#CopyFile() {{{1
-function! filetree#CopyFile()
-	let file_index = s:CursorIndex()
-	if file_index == -1
-		return
-	else
-		let path = s:tree[file_index].path
-	endif
+function! filetree#ConfirmMove(path, command, prompt)
+	let name = split(a:path, "/")[-1]
+	let new_path = input(a:prompt, s:GetCursorDirectory() . "/" . name)
+	exec "!" . a:command . " '" . a:path . "' '" . new_path . "'"
 
-	let new_path = input("Path of copy: ")
-
-	silent exec "!cp -rf '" . path . "' '" . new_path . "'"
-
+	silent! unmap x
 	call filetree#Reload()
 endfunction
 
@@ -849,7 +857,10 @@ endfunction
 " FUNCTION: s:IsHidden(path) {{{1
 function! s:IsHidden(path)
 	let path_split = split(a:path, "/")
-	for q in path_split
+	let split_len = len(path_split) - len(split(s:pwd, "/"))
+	let g:sl = split_len
+	let g:sp = path_split[-split_len:-1]
+	for q in path_split[-split_len:-1]
 		if q[0:0] == "."
 			return 1
 		endif
