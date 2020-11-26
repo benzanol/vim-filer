@@ -1,13 +1,16 @@
+" Get filetree icons
+let s:i = g:filetree.icons
+
 " Match regexes to color groups
-syn match FiletreeDirectory "[^→]*\/\s$"
-syn match FiletreeExecutable "[^→]*\*\s$"
+exec "syn match FiletreeDirectory '[^" . s:i.f_redirect . "]*\\/\\s*$'"
+exec "syn match FiletreeExecutable '\\w[^" . s:i.f_redirect . "]*\\*\s*$'"
 syn match FiletreePwd "^[/~].*/$"
 syn match FiletreePwd "^/$"
 
-syn match FiletreeRedirect ".*→ "
-syn match FiletreeGitCommitted "✓"
-syn match FiletreeGitAdded "✚"
-syn match FiletreeGitModified "✗"
+exec "syn match FiletreeRedirect '.*" . s:i.f_redirect . " '"
+exec "syn match FiletreeGitCommitted '" . s:i.g_committed . "'"
+exec "syn match FiletreeGitAdded '" . s:i.g_added . "'"
+exec "syn match FiletreeGitModified '" . s:i.g_modified . "'"
 
 silent exec "syn match FiletreeIndent '" . filetree#Get("s:indent_marker") . "'"
 

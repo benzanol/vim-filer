@@ -32,7 +32,8 @@ function! sidebar#Open(drawer)
 
 	" Set settings in case they aren't already
 	let &buftype = "nofile"
-	exec "file " . s:name
+	exec "file " . s:name . "." . a:drawer
+	let g:drawer = a:drawer
 	setlocal nobuflisted
 	setlocal nonumber
 	setlocal cursorline
@@ -85,7 +86,7 @@ function! sidebar#Print(text)
 
 	" Enable syntax highlighting
 	exec "hi SidebarBody ctermbg=NONE guibg=" . s:color
-	setlocal winhl=Normal:SidebarBody
+	"setlocal winhl=Normal:SidebarBody
 
 	setlocal nomodifiable
 endfunction
