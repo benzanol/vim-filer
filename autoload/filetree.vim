@@ -3,23 +3,23 @@
 " ==============================================================================
 " Set variables on file load {{{1
 let g:filetree = {}
+let g:filetree.icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
+let g:filetree.indent_marker = '│ ' " The marker to show the change in level between files
+let g:filetree.buffer_name = '__filetree__' " The stored name of the filetree buffer
+let g:filetree.buffer_size = 35 " The width of the filetree buffer
+let g:filetree.buffer_position = 'left' " The side of the screen for the filetree to be on
 
+let s:script_path = expand("<sfile>:p")
+let s:plugin_path = expand("<sfile>:p:h:h")
 " }}}
 
 " FUNCTION: filetree#Initialize() {{{1
 function! filetree#Initialize()
-	" Get global options
-	let s:icon_type = has_key(g:filetree, "icon_type") ? g:filetree.icon_type : "filled"
-
-	" Local variables
-	let s:pwd = getcwd()
-	let s:opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
-	let s:show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
-	let s:first_line = 2 " First line of tree after any heading text
-	let s:indent_marker = "│ "
-
-	call s:InitializeMappings()
+	" Call other initialization functions
+	call s:InitializeVariables()
 	call s:InitializeIcons()
+	call s:InitializeBuffer()
+	call s:InitializeMappings()
 
 	" Generate the starting tree
 	let s:tree = s:GenerateTree(getcwd(), 0) " Stores a list of file/level pairs, representing each files distance from the root directory
@@ -29,47 +29,90 @@ function! filetree#Initialize()
 endfunction
 
 " }}}
+" FUNCTION: s:InitializeBuffer() {{{1
+function! s:InitializeBuffer()
+	let window_number = bufwinnr(g:filetree.buffer_name)
+	if window_number == -1 " If the sidebar isn't open, create a new split and open it
+		let g:action = "Open"
+		exec "vnew " . g:filetree.buffer_name
+
+	else " If the sidebar is open, navigate to it
+		let g:action = "Navigate"
+		exec window_number . "wincmd w"
+	endif
+
+	" Move buffer to far side of screen
+	exec "wincmd " . (g:filetree.buffer_position == "left" ? "H" : "L")
+	exec "vertical resize" . g:filetree.buffer_size
+
+	" Set settings in case they aren't already
+	let &buftype = "nofile"
+	setlocal nobuflisted
+	setlocal hidden
+	setlocal nonumber
+	setlocal cursorline
+	setlocal nomodifiable
+	setlocal foldmethod=manual
+	setlocal nolist
+	setlocal nowrap
+	setlocal winfixheight
+	setlocal winfixwidth
+endfunction
+" }}}
+" FUNCTION: s:InitializeVariables() {{{1
+function! s:InitializeVariables()
+	let s:pwd = getcwd()
+	let s:opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
+	let s:show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
+	let s:first_line = 2 " First line of tree after any heading text
+	let s:indent_marker = "│ "
+endfunction
+" }}}
 " FUNCTION: s:InitializeMappings() {{{1
 function! s:InitializeMappings()
-	let s:mappings = {}
-	let s:mappings["<CR>"] = "Edit()"
-	let s:mappings["."] = "ShowHidden(-1)"
-	let s:mappings.v = "ShowInfo()"
+	let mappings = {}
 
-	let s:mappings["<Space>"] = "Open()"
-	let s:mappings.o = "OpenAll()"
-	let s:mappings.O = "CloseAll()"
+	let mappings["<CR>"] = "Edit()"
+	let mappings["."] = "ShowHidden(-1)"
+	let mappings.v = "ShowInfo()"
 
-	let s:mappings.r  = "Reload()"
-	let s:mappings.k  = "Scroll('up')"
-	let s:mappings.j  = "Scroll('down')"
-	let s:mappings.h  = "DirMove('up')"
-	let s:mappings.l  = "DirMove('down')"
-	let s:mappings.H  = "DirShift('up')"
-	let s:mappings.L  = "DirShift('down')"
+	let mappings["<Space>"] = "Open()"
+	let mappings.o = "OpenAll()"
+	let mappings.O = "CloseAll()"
 
-	let s:mappings["~"] = "NavigateTo('~')"
-	let s:mappings.th = "NavigateTo('~')"
-	let s:mappings.tr = "NavigateTo('/')"
-	let s:mappings.u = "NavigateTo('..')"
+	let mappings.r  = "Reload()"
+	let mappings.k  = "Scroll('up')"
+	let mappings.j  = "Scroll('down')"
+	let mappings.h  = "DirMove('up')"
+	let mappings.l  = "DirMove('down')"
+	let mappings.H  = "DirShift('up')"
+	let mappings.L  = "DirShift('down')"
 
-	let s:mappings.a  = "AddFile(' ')"
-	let s:mappings.af = "AddFile('f')"
-	let s:mappings.ad = "AddFile('d')"
+	let mappings["~"] = "NavigateTo('~')"
+	let mappings.th = "NavigateTo('~')"
+	let mappings.tr = "NavigateTo('/')"
+	let mappings.u = "NavigateTo('..')"
 
-	let s:mappings.fx = "SetExecutable(-1)"
-	let s:mappings.fd = "DeleteFile()"
-	let s:mappings.fr = "RenameFile()"
-	let s:mappings.fm = "MoveFile('move')"
-	let s:mappings.fc = "MoveFile('copy')"
-	let s:mappings.fl = "MoveFile('link')"
+	let mappings.a  = "AddFile(' ')"
+	let mappings.af = "AddFile('f')"
+	let mappings.ad = "AddFile('d')"
 
-	let s:mappings.ga = "GitCmd('add')"
-	let s:mappings.gc = "GitCmd('commit')"
-	let s:mappings.gC = "GitCmd('ammend')"
-	let s:mappings.gl = "GitCmd('log')"
+	let mappings.fx = "SetExecutable(-1)"
+	let mappings.fd = "DeleteFile()"
+	let mappings.fr = "RenameFile()"
+	let mappings.fm = "MoveFile('move')"
+	let mappings.fc = "MoveFile('copy')"
+	let mappings.fl = "MoveFile('link')"
 
-	let g:sidebars.filetree.mappings = s:mappings
+	let mappings.ga = "GitCmd('add')"
+	let mappings.gc = "GitCmd('commit')"
+	let mappings.gC = "GitCmd('ammend')"
+	let mappings.gl = "GitCmd('log')"
+
+	silent map clear
+	for q in keys(mappings)
+		exec "nnoremap <buffer> <silent> " . q . " :call filetree#" . mappings[q] . "<CR>"
+	endfor
 endfunction
 " }}}
 " FUNCTION: s:InitializeIcons() {{{1
@@ -86,10 +129,10 @@ function! s:InitializeIcons()
 	call add(filetypes, {"type":"pdf",     "unicode":"🖹", "outline":"", "filled":"", "extensions":["pdf"]})
 	call add(filetypes, {"type":"vim",     "unicode":"🖹", "outline":"", "filled":"", "extensions":["vim"]})
 
-	if s:icon_type == "filled" || s:icon_type == "outline" || s:icon_type == "unicode"
+	if g:filetree.icon_type == "filled" || g:filetree.icon_type == "outline" || g:filetree.icon_type == "unicode"
 		for q in filetypes
 			for r in q.extensions
-				let s:icons["e_" . r] = q[s:icon_type]
+				let s:icons["e_" . r] = q[g:filetree.icon_type]
 			endfor
 		endfor
 	endif
@@ -105,7 +148,7 @@ function! s:InitializeIcons()
 	call add(file_categories, {"type":"redirect", "text":">", "unicode":"➝", "outline":">", "filled":">"})
 
 	for q in file_categories
-		let s:icons["f_" . q.type] = q[s:icon_type]
+		let s:icons["f_" . q.type] = q[g:filetree.icon_type]
 	endfor
 
 	" Git icons
@@ -115,10 +158,10 @@ function! s:InitializeIcons()
 	call add(git_options, {"type":"modified",  "text":"x", "unicode":"×", "outline":"✗", "filled":"✗"})
 
 	for q in git_options
-		let s:icons["g_" . q.type] = q[s:icon_type]
+		let s:icons["g_" . q.type] = q[g:filetree.icon_type]
 	endfor
-	
-	let g:filetree.icons = s:icons
+
+	let g:filetree_icons = s:icons
 endfunction
 " }}}
 
@@ -135,7 +178,7 @@ function! s:GetText()
 		let heading = substitute(s:pwd, $HOME, "~", "") . "/"
 
 		if len(heading) > winwidth(0)
-				let heading = s:GetShortPath(s:pwd) . "/"
+			let heading = s:GetShortPath(s:pwd) . "/"
 			if len(heading) > winwidth(0)
 				let heading = split(s:pwd, "/")[-1] . "/"
 			endif
@@ -149,7 +192,7 @@ function! s:GetText()
 		if s:show_hidden == 0 && s:IsHidden(q.path)
 			continue
 		endif
-		
+
 		let indent = repeat(s:indent_marker, q.level + 1)
 
 		call add(output, indent . q.start . " " . q.name . q.link . q.end)
@@ -161,7 +204,32 @@ endfunction
 " }}}
 " FUNCTION: s:Print() {{{1
 function! s:Print()
-	call sidebar#Print(s:GetText())
+	setlocal modifiable
+
+	" Generate the text
+	let text = s:GetText()
+
+	" Save cursor location before redraw
+	let cursor_location = [line("."), col(".")]
+
+	" Replace all current text with new text
+	silent exec "0," . line("$") . "delete"
+	for q in text
+		put =q
+	endfor
+	silent 1delete
+
+	" Move cursor up and down file to load colors
+	norm! gg
+	exec "norm! " . line("$") . "j"
+
+	" Move cursor to previous location
+	call cursor(cursor_location)
+
+	" Enable syntax highlighting
+	exec "source " . s:plugin_path . "/syntax/filetree.vim"
+
+	setlocal nomodifiable
 endfunction
 
 " }}}
@@ -570,7 +638,7 @@ function! filetree#MoveFile(action)
 	else
 		let path = s:tree[file_index].path
 	endif
-	
+
 	if a:action == "copy"
 		let statement = "Navigate to the folder where you want to create the copy"
 		let prompt = "Path of copy: "
@@ -584,7 +652,7 @@ function! filetree#MoveFile(action)
 		let prompt = "New path: "
 		let command = "mv"
 	endif
-	
+
 	echo statement . ", and press x to select it"
 	exec "noremap <buffer> <silent> <nowait> x :call filetree#ConfirmMove('" . path . "', '" . command . "', '" . prompt . "')<CR>"
 endfunction
@@ -769,7 +837,7 @@ endfunction
 " FUNCTION: s:GetFiletypeIcon(file) {{{1
 function! s:GetFiletypeIcon(file)
 	let file_split = split(a:file, "\\.")
-	if len(file_split) <= 1 || s:icon_type == "text"
+	if len(file_split) <= 1 || g:filetree.icon_type == "text"
 		return s:icons.f_file
 	endif
 

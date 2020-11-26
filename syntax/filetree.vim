@@ -1,5 +1,5 @@
 " Get filetree icons
-let s:i = g:filetree.icons
+let s:i = g:filetree_icons
 
 " Match regexes to color groups
 "exec "syn match FiletreeDirectory '[^" . s:i.f_redirect . "]*\\/\\s*$'"
@@ -13,7 +13,7 @@ exec "syn match FiletreeGitCommitted '" . s:i.g_committed . "'"
 exec "syn match FiletreeGitAdded '" . s:i.g_added . "'"
 exec "syn match FiletreeGitModified '" . s:i.g_modified . "'"
 
-silent exec "syn match FiletreeIndent '" . filetree#Get("s:indent_marker") . "'"
+silent exec "syn match FiletreeIndent '" . g:filetree.indent_marker . "'"
 
 " Link color groups to colors
 let grey = { "fg":synIDattr(synIDtrans(hlID("Comment")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Comment")), "fg#", "gui") }
