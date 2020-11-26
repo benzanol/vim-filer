@@ -228,7 +228,7 @@ function! filetree#OpenAll()
 		for i in range(len(g:tree))
 			let q = g:tree[i]
 
-			if q.level == level && q.end == "/"
+			if q.level == level && q.end == "/" && (q.name[0:0] != "." || s:show_hidden)
 				call add(dir_list, i)
 				if q.open == 0
 					let any_closed = 1
@@ -242,8 +242,10 @@ function! filetree#OpenAll()
 			let level += 1
 			continue
 		else
-			for q in dir_list
-				call s:OpenDirectory(q)
+			let g:dirs = dir_list
+			for i in range(len(dir_list))
+				let reverse = dir_list[len(dir_list) - 1 - i]
+				call s:OpenDirectory(reverse)
 			endfor
 
 			call s:Print()
