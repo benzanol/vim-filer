@@ -33,11 +33,9 @@ endfunction
 function! s:InitializeBuffer()
 	let window_number = bufwinnr(g:filetree.buffer_name)
 	if window_number == -1 " If the sidebar isn't open, create a new split and open it
-		let g:action = "Open"
-		exec "vnew " . g:filetree.buffer_name
+		silent! exec "vnew " . g:filetree.buffer_name
 
 	else " If the sidebar is open, navigate to it
-		let g:action = "Navigate"
 		exec window_number . "wincmd w"
 	endif
 
@@ -50,7 +48,6 @@ function! s:InitializeBuffer()
 	setlocal nobuflisted
 	setlocal hidden
 	setlocal nonumber
-	setlocal cursorline
 	setlocal nomodifiable
 	setlocal foldmethod=manual
 	setlocal nolist
