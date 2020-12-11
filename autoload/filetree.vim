@@ -16,8 +16,12 @@ let s:plugin_path = expand("<sfile>:p:h:h")
 " FUNCTION: filetree#Initialize() {{{1
 function! filetree#Initialize()
 	" Call other initialization functions
-	call s:InitializeVariables()
-	call s:InitializeIcons()
+	if !exists("s:filetree_open")
+		let s:filetree_open = 1
+		call s:InitializeVariables()
+		call s:InitializeIcons()
+	endif
+
 	call s:InitializeBuffer()
 	call s:InitializeMappings()
 
@@ -569,26 +573,24 @@ function! filetree#DeleteFile()
 	endif
 	let name = split(path, "/")[-1]
 
-	let confirm_message = "Type 'confirm' to delete it, or press <Esc> to cancel: " 
-
 	if s:GetProperty(path, "L")
-		let confirmed = input("Deleting link '" . name . "'\n" . confirm_message)
+		let confirmed = input("Deleting link '" . name . "': y/N")
 	elseif s:GetProperty(path, "d")
-		let file_count = substitute(system("find '" . name . "' -type f | wc -l"), "\n", "", "g")
+		let file_count = substitute(system("find '" . name . "' -type f | wc -l"), "", "", "g")
 
 		if file_count == 0
-			let confirmed = input("Deleting empty directory '" . name . "'\n" . confirm_message)
+			let confirmed = input("Deleting empty directory '" . name . "': y/N")
 		elseif file_count == 1
-			let confirmed = input("Deleting directory '" . name . "' and 1 file\n" . confirm_message)
+			let confirmed = input("Deleting directory '" . name . "' and 1 file: y/N")
 		else
-			let confirmed = input("Deleting directory '" . name . "' and " . file_count . " files\n" . confirm_message)
+			let confirmed = input("Deleting directory '" . name . "' and " . file_count . " files: y/N")
 		endif
 
 	else
-		let confirmed = input("Deleting file '" . name . "'\n" . confirm_message)
+		let confirmed = input("Deleting file '" . name . "': y/N")
 	endif
 
-	if confirmed != "confirm"
+	if confirmed != "y" && confirmed != "Y"
 		return
 	endif
 
