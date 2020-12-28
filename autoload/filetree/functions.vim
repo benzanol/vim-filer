@@ -30,7 +30,7 @@ function! filetree#functions#GetCursorDirectory()
 	endif
 
 	let path = g:filetree#tree[file_index].path
-	if filetree#functions#GetProperty(path, "d") == 1
+	if filetree#functions#GetProperty(path, "d") == 1 && g:filetree#tree[file_index].open
 		return path
 	else
 		return substitute(system("dirname '" . path . "'"), "\n", "", "g")
