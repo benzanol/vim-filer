@@ -2,7 +2,7 @@
 A nerdtree clone with improved speed, as well as additional file management features\
 \
 To launch filer:\
-`call filetree#Launch()`
+`call filer#Launch()`
 ## Navigation Shortcuts
 * `?`: Show a list of shortcuts within the plugin
 * `Space`: Toggle a directory being open

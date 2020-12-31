@@ -2,51 +2,51 @@
 " Important functions
 " ==============================================================================
 " Set variables on file load {{{1
-let g:filetree = {}
-let g:filetree#icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
-let g:filetree#indent_marker = '│ ' " The marker to show the change in level between files
-let g:filetree#buffer_name = '__filetree__' " The stored name of the filetree buffer
-let g:filetree#buffer_size = 35 " The width of the filetree buffer
-let g:filetree#buffer_position = 'left' " The side of the screen for the filetree to be on
+let g:filer = {}
+let g:filer#icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
+let g:filer#indent_marker = '│ ' " The marker to show the change in level between files
+let g:filer#buffer_name = '__filer__' " The stored name of the filer buffer
+let g:filer#buffer_size = 35 " The width of the filer buffer
+let g:filer#buffer_position = 'left' " The side of the screen for the filer to be on
 
 let s:script_path = expand("<sfile>:p")
 let s:plugin_path = expand("<sfile>:p:h:h")
 " }}}
 
-" FUNCTION: filetree#Launch() {{{1
-function! filetree#Launch()
+" FUNCTION: filer#Launch() {{{1
+function! filer#Launch()
 	" Call other initialization functions
-	if !exists("s:filetree_open")
-		let s:filetree_open = 1
-		call filetree#InitializeVariables()
-		call filetree#icons#InitializeIcons()
+	if !exists("s:filer_open")
+		let s:filer_open = 1
+		call filer#InitializeVariables()
+		call filer#icons#InitializeIcons()
 	endif
 
-	call filetree#InitializeBuffer()
-	call filetree#InitializeMappings()
+	call filer#InitializeBuffer()
+	call filer#InitializeMappings()
 
 	" Generate the starting tree
-	let g:filetree#pwd = getcwd()
-	let g:filetree#tree = filetree#tree#GenerateTree(getcwd(), 0) " Stores a list of file/level pairs, representing each files distance from the root directory
+	let g:filer#pwd = getcwd()
+	let g:filer#tree = filer#tree#GenerateTree(getcwd(), 0) " Stores a list of file/level pairs, representing each files distance from the root directory
 
-	" Draw the filetree to the screen
-	call filetree#display#Print()
+	" Draw the filer to the screen
+	call filer#display#Print()
 endfunction
 
 " }}}
-" FUNCTION: filetree#InitializeBuffer() {{{1
-function! filetree#InitializeBuffer()
-	let window_number = bufwinnr(g:filetree#buffer_name)
+" FUNCTION: filer#InitializeBuffer() {{{1
+function! filer#InitializeBuffer()
+	let window_number = bufwinnr(g:filer#buffer_name)
 	if window_number == -1 " If the sidebar isn't open, create a new split and open it
-		silent! exec "vnew " . g:filetree#buffer_name
+		silent! exec "vnew " . g:filer#buffer_name
 
 	else " If the sidebar is open, navigate to it
 		exec window_number . "wincmd w"
 	endif
 
 	" Move buffer to far side of screen
-	exec "wincmd " . (g:filetree#buffer_position == "left" ? "H" : "L")
-	exec "vertical resize" . g:filetree#buffer_size
+	exec "wincmd " . (g:filer#buffer_position == "left" ? "H" : "L")
+	exec "vertical resize" . g:filer#buffer_size
 
 	" Set settings in case they aren't already
 	let &buftype = "nofile"
@@ -61,17 +61,17 @@ function! filetree#InitializeBuffer()
 	setlocal winfixwidth
 endfunction
 " }}}
-" FUNCTION: filetree#InitializeVariables() {{{1
-function! filetree#InitializeVariables()
-	let g:g:filetree#pwd = getcwd()
-	let g:filetree#opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
-	let g:filetree#show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
-	let g:filetree#first_line = 2 " First line of tree after any heading text
+" FUNCTION: filer#InitializeVariables() {{{1
+function! filer#InitializeVariables()
+	let g:g:filer#pwd = getcwd()
+	let g:filer#opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
+	let g:filer#show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
+	let g:filer#first_line = 2 " First line of tree after any heading text
 	let s:indent_marker = "│ "
 endfunction
 " }}}
-" FUNCTION: filetree#InitializeMappings() {{{1
-function! filetree#InitializeMappings()
+" FUNCTION: filer#InitializeMappings() {{{1
+function! filer#InitializeMappings()
 	let mappings = {}
 
 	let mappings["<CR>"] = "Edit()"
@@ -113,7 +113,7 @@ function! filetree#InitializeMappings()
 
 	silent map clear
 	for q in keys(mappings)
-		exec "nnoremap <buffer> <silent> " . q . " :call filetree#actions#" . mappings[q] . "<CR>"
+		exec "nnoremap <buffer> <silent> " . q . " :call filer#actions#" . mappings[q] . "<CR>"
 	endfor
 endfunction
 " }}}

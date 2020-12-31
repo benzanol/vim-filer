@@ -1,5 +1,5 @@
-" FUNCTION: filetree#tree#GenerateTree(dir, level) {{{1
-function! filetree#tree#GenerateTree(dir, level)
+" FUNCTION: filer#tree#GenerateTree(dir, level) {{{1
+function! filer#tree#GenerateTree(dir, level)
 	let new_tree = [] " Local variable storing the entire tree for the current level of the function
 
 	" Get the list of files in the current directory, and with link endings
@@ -23,7 +23,7 @@ function! filetree#tree#GenerateTree(dir, level)
 	let here_opendirs = []
 	let dir_split = split(a:dir, "/")
 	let dir_level = len(dir_split)
-	for q in g:filetree#opendirs
+	for q in g:filer#opendirs
 		" If there is an open directory in the current directory
 		if split(q, "/")[0:-2] == dir_split
 			call add(here_opendirs, q)
@@ -53,7 +53,7 @@ function! filetree#tree#GenerateTree(dir, level)
 		" Detect if file is a link
 		let new_item.link = ""
 		if link_ending[i][-1:-1] == "@"
-			let new_item.link = "@ " . g:filetree#icons.f_redirect . " " . filetree#functions#GetShortPath(resolve(new_item.path))
+			let new_item.link = "@ " . g:filer#icons.f_redirect . " " . filer#functions#GetShortPath(resolve(new_item.path))
 		endif
 
 		" Detect if the file is an open directory
@@ -68,9 +68,9 @@ function! filetree#tree#GenerateTree(dir, level)
 		if indicator != "/" " If the file is a regular file
 			" Figure out the filetype icon
 			if new_item.link == ""
-				let file_icon = filetree#icons#GetFiletypeIcon(new_item.name)
+				let file_icon = filer#icons#GetFiletypeIcon(new_item.name)
 			else
-				let file_icon = g:filetree#icons.f_link
+				let file_icon = g:filer#icons.f_link
 			endif
 
 			" Figure out the file's git status
@@ -78,11 +78,11 @@ function! filetree#tree#GenerateTree(dir, level)
 			if git_dir != ""
 				let git_status = system("git status -s '" . new_item.path . "'")
 				if git_status == ""
-					let git_icon = g:filetree#icons.g_committed
+					let git_icon = g:filer#icons.g_committed
 				elseif git_status[1:1] == " "
-					let git_icon = g:filetree#icons.g_added
+					let git_icon = g:filer#icons.g_added
 				else
-					let git_icon = g:filetree#icons.g_modified
+					let git_icon = g:filer#icons.g_modified
 				endif
 			endif
 
@@ -91,16 +91,16 @@ function! filetree#tree#GenerateTree(dir, level)
 
 		else " If the file is a directory
 			if new_item.link == ""
-				let dir_icon = g:filetree#icons.f_dir
+				let dir_icon = g:filer#icons.f_dir
 			else
-				let dir_icon = g:filetree#icons.f_dirlink
+				let dir_icon = g:filer#icons.f_dirlink
 			endif
 
 			if is_open_dir
-				let new_item.start = g:filetree#icons.f_open . " " . dir_icon . " "
+				let new_item.start = g:filer#icons.f_open . " " . dir_icon . " "
 				let new_item.open = 1
 			else
-				let new_item.start = g:filetree#icons.f_closed . " " . dir_icon . " "
+				let new_item.start = g:filer#icons.f_closed . " " . dir_icon . " "
 				let new_item.open = 0
 			endif
 		endif
@@ -110,7 +110,7 @@ function! filetree#tree#GenerateTree(dir, level)
 
 		" Check if it is an open directory, and if so generate its contents
 		if is_open_dir
-			let subtree = filetree#tree#GenerateTree(new_item.path, a:level + 1)
+			let subtree = filer#tree#GenerateTree(new_item.path, a:level + 1)
 			let new_tree = new_tree + subtree
 		endif
 
@@ -122,78 +122,78 @@ function! filetree#tree#GenerateTree(dir, level)
 endfunction
 
 " }}}
-" FUNCTION: filetree#tree#ChangeDirectory(dir) {{{1
-function! filetree#tree#ChangeDirectory(dir)
-	if filetree#functions#GetProperty(a:dir, "f")
+" FUNCTION: filer#tree#ChangeDirectory(dir) {{{1
+function! filer#tree#ChangeDirectory(dir)
+	if filer#functions#GetProperty(a:dir, "f")
 		return "Not a directory"
 	endif
 
 	exec "cd " . a:dir
-	let g:filetree#pwd = a:dir
-	let g:filetree#tree = filetree#tree#GenerateTree(a:dir, 0)
+	let g:filer#pwd = a:dir
+	let g:filer#tree = filer#tree#GenerateTree(a:dir, 0)
 endfunction
 
 " }}}
-" FUNCTION: filetree#tree#OpenDirectory(index) {{{1
-function! filetree#tree#OpenDirectory(index)
-	let path = g:filetree#tree[a:index].path
+" FUNCTION: filer#tree#OpenDirectory(index) {{{1
+function! filer#tree#OpenDirectory(index)
+	let path = g:filer#tree[a:index].path
 
 	" Cancel the function if it isn't a directory, or if it's already open
-	let opendir_index = index(g:filetree#opendirs, path)
-	if filetree#functions#GetProperty(path, "f") || opendir_index != -1
+	let opendir_index = index(g:filer#opendirs, path)
+	if filer#functions#GetProperty(path, "f") || opendir_index != -1
 		return
 	endif
 
 	" Mark the file as open and add it to the list of open directories
-	let g:filetree#tree[a:index].open = 1
-	call add(g:filetree#opendirs, path)
+	let g:filer#tree[a:index].open = 1
+	call add(g:filer#opendirs, path)
 
 	" Change the icon to show that the directory is open
-	let g:filetree#tree[a:index].start = substitute(g:filetree#tree[a:index].start, g:filetree#icons.f_closed, g:filetree#icons.f_open, "")
+	let g:filer#tree[a:index].start = substitute(g:filer#tree[a:index].start, g:filer#icons.f_closed, g:filer#icons.f_open, "")
 
 	" Add the contents of the directory to the tree
-	let subtree = filetree#tree#GenerateTree(path, g:filetree#tree[a:index].level + 1)
-	let tree_len = len(g:filetree#tree)
+	let subtree = filer#tree#GenerateTree(path, g:filer#tree[a:index].level + 1)
+	let tree_len = len(g:filer#tree)
 	if a:index < tree_len - 1
-		let g:filetree#tree = g:filetree#tree[0:(a:index)] + subtree + g:filetree#tree[(a:index + 1):-1]
+		let g:filer#tree = g:filer#tree[0:(a:index)] + subtree + g:filer#tree[(a:index + 1):-1]
 	else
-		let g:filetree#tree = g:filetree#tree + subtree
+		let g:filer#tree = g:filer#tree + subtree
 	endif
 endfunction
 
 " }}}
-" FUNCTION: filetree#tree#CloseDirectory(index) {{{1
-function! filetree#tree#CloseDirectory(index)
-	let path = g:filetree#tree[a:index].path
+" FUNCTION: filer#tree#CloseDirectory(index) {{{1
+function! filer#tree#CloseDirectory(index)
+	let path = g:filer#tree[a:index].path
 
 	" Cancel the function if it isn't a directory, or if it's already open
-	let opendir_index = index(g:filetree#opendirs, path)
-	if filetree#functions#GetProperty(path, "f") || opendir_index == -1
+	let opendir_index = index(g:filer#opendirs, path)
+	if filer#functions#GetProperty(path, "f") || opendir_index == -1
 		return
 	endif
 
 	" Mark the file as closed, and remove it from the list of open directories
-	let g:filetree#tree[a:index].open = 0
-	call remove(g:filetree#opendirs, opendir_index)
+	let g:filer#tree[a:index].open = 0
+	call remove(g:filer#opendirs, opendir_index)
 
 	" Change the icon to show that the directory is closed
-	let g:filetree#tree[a:index].start = substitute(g:filetree#tree[a:index].start, g:filetree#icons.f_open, g:filetree#icons.f_closed, "")
+	let g:filer#tree[a:index].start = substitute(g:filer#tree[a:index].start, g:filer#icons.f_open, g:filer#icons.f_closed, "")
 
 	" Remove the contents of the directory from the tree
-	let level = g:filetree#tree[a:index].level
+	let level = g:filer#tree[a:index].level
 	let end_index = a:index + 1
-	if g:filetree#tree[end_index].level <= level
+	if g:filer#tree[end_index].level <= level
 		return
 	endif
 
-	while end_index + 1 < len(g:filetree#tree) && g:filetree#tree[end_index + 1].level > level
+	while end_index + 1 < len(g:filer#tree) && g:filer#tree[end_index + 1].level > level
 		let end_index += 1
 	endwhile
 
-	if end_index == len(g:filetree#tree) - 1
-		let g:filetree#tree = g:filetree#tree[0:(a:index)]
+	if end_index == len(g:filer#tree) - 1
+		let g:filer#tree = g:filer#tree[0:(a:index)]
 	else
-		let g:filetree#tree = g:filetree#tree[0:(a:index)] + g:filetree#tree[end_index + 1:-1]
+		let g:filer#tree = g:filer#tree[0:(a:index)] + g:filer#tree[end_index + 1:-1]
 	endif
 endfunction
 

@@ -1,19 +1,19 @@
-" FUNCTION: filetree#display#GetText()
-function! filetree#display#GetText()
+" FUNCTION: filer#display#GetText()
+function! filer#display#GetText()
 	" Get the longest version of the heading that will fit in the window
-	if g:filetree#pwd == "/"
+	if g:filer#pwd == "/"
 		let heading = "/"
 	else
-		let heading = g:filetree#pwd . "/"
+		let heading = g:filer#pwd . "/"
 	endif
 
 	if len(heading) > winwidth(0)
-		let heading = substitute(g:filetree#pwd, $HOME, "~", "") . "/"
+		let heading = substitute(g:filer#pwd, $HOME, "~", "") . "/"
 
 		if len(heading) > winwidth(0)
-			let heading = filetree#functions#GetShortPath(g:filetree#pwd) . "/"
+			let heading = filer#functions#GetShortPath(g:filer#pwd) . "/"
 			if len(heading) > winwidth(0)
-				let heading = split(g:filetree#pwd, "/")[-1] . "/"
+				let heading = split(g:filer#pwd, "/")[-1] . "/"
 			endif
 		endif
 	endif
@@ -21,12 +21,12 @@ function! filetree#display#GetText()
 	" Convert the tree list into a formatted string with line breaks and indents
 	let output = [heading]
 
-	for q in g:filetree#tree
-		if g:filetree#show_hidden == 0 && filetree#functions#IsHidden(q.path)
+	for q in g:filer#tree
+		if g:filer#show_hidden == 0 && filer#functions#IsHidden(q.path)
 			continue
 		endif
 
-		let indent = repeat(g:filetree#indent_marker, q.level + 1)
+		let indent = repeat(g:filer#indent_marker, q.level + 1)
 
 		call add(output, indent . q.start . " " . q.name . q.link . q.end)
 	endfor
@@ -34,12 +34,12 @@ function! filetree#display#GetText()
 	return output
 endfunction
 
-" FUNCTION: filetree#display#Print()
-function! filetree#display#Print()
+" FUNCTION: filer#display#Print()
+function! filer#display#Print()
 	setlocal modifiable
 
 	" Generate the text
-	let text = filetree#display#GetText()
+	let text = filer#display#GetText()
 
 	" Save cursor location before redraw
 	let cursor_location = [line("."), col(".")]
@@ -59,7 +59,7 @@ function! filetree#display#Print()
 	call cursor(cursor_location)
 
 	" Enable colors
-	call filetree#colors#SetColors()
+	call filer#colors#SetColors()
 
 	setlocal nomodifiable
 endfunction

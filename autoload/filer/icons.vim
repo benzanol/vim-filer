@@ -1,22 +1,22 @@
-" FUNCTION: filetree#icons#GetFiletypeIcon(file)
-function! filetree#icons#GetFiletypeIcon(file)
+" FUNCTION: filer#icons#GetFiletypeIcon(file)
+function! filer#icons#GetFiletypeIcon(file)
 	let file_split = split(a:file, "\\.")
-	if len(file_split) <= 1 || g:filetree#icon_type == "text"
-		return g:filetree#icons.f_file
+	if len(file_split) <= 1 || g:filer#icon_type == "text"
+		return g:filer#icons.f_file
 	endif
 
 	let extension = file_split[-1]
 
-	if has_key(g:filetree#icons, "e_" . extension)
-		return g:filetree#icons["e_" . extension]
+	if has_key(g:filer#icons, "e_" . extension)
+		return g:filer#icons["e_" . extension]
 	else
-		return g:filetree#icons.f_file
+		return g:filer#icons.f_file
 	endif
 endfunction
 
-" FUNCTION: filetree#icons#InitializeIcons()
-function! filetree#icons#InitializeIcons()
-	let g:filetree#icons = {}
+" FUNCTION: filer#icons#InitializeIcons()
+function! filer#icons#InitializeIcons()
+	let g:filer#icons = {}
 
 	let filetypes = []
 	call add(filetypes, {"type":"archive", "unicode":"🖹", "outline":"", "filled":"", "extensions":["tar", "zip", "gz", "xz", "bz2"]})
@@ -28,10 +28,10 @@ function! filetree#icons#InitializeIcons()
 	call add(filetypes, {"type":"pdf",     "unicode":"🖹", "outline":"", "filled":"", "extensions":["pdf"]})
 	call add(filetypes, {"type":"vim",     "unicode":"🖹", "outline":"", "filled":"", "extensions":["vim"]})
 
-	if g:filetree#icon_type == "filled" || g:filetree#icon_type == "outline" || g:filetree#icon_type == "unicode"
+	if g:filer#icon_type == "filled" || g:filer#icon_type == "outline" || g:filer#icon_type == "unicode"
 		for q in filetypes
 			for r in q.extensions
-				let g:filetree#icons["e_" . r] = q[g:filetree#icon_type]
+				let g:filer#icons["e_" . r] = q[g:filer#icon_type]
 			endfor
 		endfor
 	endif
@@ -47,7 +47,7 @@ function! filetree#icons#InitializeIcons()
 	call add(file_categories, {"type":"redirect", "text":">", "unicode":"➝", "outline":">", "filled":">"})
 
 	for q in file_categories
-		let g:filetree#icons["f_" . q.type] = q[g:filetree#icon_type]
+		let g:filer#icons["f_" . q.type] = q[g:filer#icon_type]
 	endfor
 
 	" Git icons
@@ -57,8 +57,8 @@ function! filetree#icons#InitializeIcons()
 	call add(git_options, {"type":"modified",  "text":"x", "unicode":"×", "outline":"✗", "filled":"✗"})
 
 	for q in git_options
-		let g:filetree#icons["g_" . q.type] = q[g:filetree#icon_type]
+		let g:filer#icons["g_" . q.type] = q[g:filer#icon_type]
 	endfor
 
-	let g:filetree_icons = g:filetree#icons
+	let g:filer_icons = g:filer#icons
 endfunction

@@ -1,12 +1,12 @@
-" FUNCTION: filetree#actions#Reload() {{{1
-function! filetree#actions#Reload()
-	let g:filetree#tree = filetree#tree#GenerateTree(g:filetree#pwd, 0)
-	call filetree#display#Print()
+" FUNCTION: filer#actions#Reload() {{{1
+function! filer#actions#Reload()
+	let g:filer#tree = filer#tree#GenerateTree(g:filer#pwd, 0)
+	call filer#display#Print()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#Scroll(direction) {{{1
-function! filetree#actions#Scroll(direction)
+" FUNCTION: filer#actions#Scroll(direction) {{{1
+function! filer#actions#Scroll(direction)
 	if a:direction == "up"
 		norm! k
 	else
@@ -14,18 +14,18 @@ function! filetree#actions#Scroll(direction)
 	endif
 endfunction
 " }}}
-" FUNCTION: filetree#actions#Edit() {{{1
-function! filetree#actions#Edit()
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#Edit() {{{1
+function! filer#actions#Edit()
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
-	if filetree#functions#GetProperty(path, "d")
-		call filetree#tree#ChangeDirectory(path)
-		call filetree#display#Print()
+	if filer#functions#GetProperty(path, "d")
+		call filer#tree#ChangeDirectory(path)
+		call filer#display#Print()
 	else
 		wincmd p
 		exec "edit " . resolve(path)
@@ -33,37 +33,37 @@ function! filetree#actions#Edit()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#Open() {{{1
-function! filetree#actions#Open()
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#Open() {{{1
+function! filer#actions#Open()
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
-	if filetree#functions#GetProperty(path, "d")
-		if g:filetree#tree[file_index].open
-			call filetree#tree#CloseDirectory(file_index)
+	if filer#functions#GetProperty(path, "d")
+		if g:filer#tree[file_index].open
+			call filer#tree#CloseDirectory(file_index)
 		else
-			call filetree#tree#OpenDirectory(file_index)
+			call filer#tree#OpenDirectory(file_index)
 		endif
-		call filetree#display#Print()
+		call filer#display#Print()
 	endif
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#OpenAll() {{{1
-function! filetree#actions#OpenAll()
+" FUNCTION: filer#actions#OpenAll() {{{1
+function! filer#actions#OpenAll()
 	let level = 0
 	while 1
 		let dir_list = []
 		let any_closed = 0
 
-		for i in range(len(g:filetree#tree))
-			let q = g:filetree#tree[i]
+		for i in range(len(g:filer#tree))
+			let q = g:filer#tree[i]
 
-			if q.level == level && q.end == "/" && (q.name[0:0] != "." || g:filetree#show_hidden)
+			if q.level == level && q.end == "/" && (q.name[0:0] != "." || g:filer#show_hidden)
 				call add(dir_list, i)
 				if q.open == 0
 					let any_closed = 1
@@ -79,97 +79,97 @@ function! filetree#actions#OpenAll()
 		else
 			for i in range(len(dir_list))
 				let reverse = dir_list[len(dir_list) - 1 - i]
-				call filetree#tree#OpenDirectory(reverse)
+				call filer#tree#OpenDirectory(reverse)
 			endfor
 
-			call filetree#display#Print()
+			call filer#display#Print()
 			return
 		endif
 	endwhile
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#CloseAll() {{{1
-function! filetree#actions#CloseAll()
-	let g:filetree#opendirs = []
-	call filetree#actions#Reload()
+" FUNCTION: filer#actions#CloseAll() {{{1
+function! filer#actions#CloseAll()
+	let g:filer#opendirs = []
+	call filer#actions#Reload()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#DirShift(direction) {{{1
-function! filetree#actions#DirShift(direction)
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#DirShift(direction) {{{1
+function! filer#actions#DirShift(direction)
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
-		let path = g:filetree#pwd
+		let path = g:filer#pwd
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
 	if a:direction == "up"
-		if index(g:filetree#opendirs, g:filetree#pwd) == -1
-			call add(g:filetree#opendirs, g:filetree#pwd)
+		if index(g:filer#opendirs, g:filer#pwd) == -1
+			call add(g:filer#opendirs, g:filer#pwd)
 		endif
 
-		if len(split(g:filetree#pwd, "/")) <= 1
+		if len(split(g:filer#pwd, "/")) <= 1
 			let new_dir = "/"
 		else
-			let new_dir_list = split(g:filetree#pwd, "/")[0:-2]
+			let new_dir_list = split(g:filer#pwd, "/")[0:-2]
 			let new_dir = "/" . join(new_dir_list, "/")
 		endif
 
 	elseif a:direction == "down"
-		if path == g:filetree#pwd
+		if path == g:filer#pwd
 			return
 		endif
 
-		let new_dir_level = len(split(g:filetree#pwd, "/"))
+		let new_dir_level = len(split(g:filer#pwd, "/"))
 		let new_dir_list = split(path, "/")[0:new_dir_level]
 		let new_dir = "/" . join(new_dir_list, "/")
 	endif
 
-	call filetree#tree#ChangeDirectory(new_dir)
-	call filetree#display#Print()
-	call cursor(filetree#functions#GetLine(path), 1)
+	call filer#tree#ChangeDirectory(new_dir)
+	call filer#display#Print()
+	call cursor(filer#functions#GetLine(path), 1)
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#DirMove(direction) {{{1
-function! filetree#actions#DirMove(direction)
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#DirMove(direction) {{{1
+function! filer#actions#DirMove(direction)
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
 	" If moving up a level (h)
 	if a:direction == "up"
 		let new_path = "/" . join(split(path, "/")[0:-2], "/")
 
-		if new_path == g:filetree#pwd
+		if new_path == g:filer#pwd
 			return
 			" Remove return statement to go up a directory when in top level
 			let new_pwd = "/" . join(split(new_path, "/")[0:-2], "/")
-			call filetree#tree#ChangeDirectory(new_pwd)
+			call filer#tree#ChangeDirectory(new_pwd)
 		endif
 
 		" Close the directory
-		call filetree#tree#CloseDirectory(filetree#functions#GetIndex(new_path))
+		call filer#tree#CloseDirectory(filer#functions#GetIndex(new_path))
 
-		call filetree#display#Print()
-		call cursor(filetree#functions#GetLine(new_path), 1)
+		call filer#display#Print()
+		call cursor(filer#functions#GetLine(new_path), 1)
 
 		" If moving down a level (l)
 	elseif a:direction == "down"
-		if filetree#functions#GetProperty(path, "d")
+		if filer#functions#GetProperty(path, "d")
 			" If the directory is closed, open it
-			if index(g:filetree#opendirs, path) == -1
-				call filetree#tree#OpenDirectory(filetree#functions#GetIndex(path))
-				call filetree#display#Print()
+			if index(g:filer#opendirs, path) == -1
+				call filer#tree#OpenDirectory(filer#functions#GetIndex(path))
+				call filer#display#Print()
 			endif
 
 			" If there are any files, go to the first one
-			if file_index != len(g:filetree#tree) - 1 && g:filetree#tree[file_index + 1].level > g:filetree#tree[file_index].level
+			if file_index != len(g:filer#tree) - 1 && g:filer#tree[file_index + 1].level > g:filer#tree[file_index].level
 				norm j
 			endif
 		endif
@@ -177,9 +177,9 @@ function! filetree#actions#DirMove(direction)
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#ShowInfo() {{{1
-function! filetree#actions#ShowInfo()
-	let path = g:filetree#tree[filetree#functions#CursorIndex()].path
+" FUNCTION: filer#actions#ShowInfo() {{{1
+function! filer#actions#ShowInfo()
+	let path = g:filer#tree[filer#functions#CursorIndex()].path
 	let real_path = resolve(path)
 
 	" Create a string with the path at the top to display
@@ -211,39 +211,39 @@ function! filetree#actions#ShowInfo()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#ShowHidden(value) {{{1
-function! filetree#actions#ShowHidden(value)
-	let path = g:filetree#tree[filetree#functions#CursorIndex()].path
+" FUNCTION: filer#actions#ShowHidden(value) {{{1
+function! filer#actions#ShowHidden(value)
+	let path = g:filer#tree[filer#functions#CursorIndex()].path
 	if a:value == 0
-		let g:filetree#show_hidden = 0
+		let g:filer#show_hidden = 0
 	elseif a:value == 1
-		let g:filetree#show_hidden = 1
+		let g:filer#show_hidden = 1
 	else
-		let g:filetree#show_hidden = !g:filetree#show_hidden
+		let g:filer#show_hidden = !g:filer#show_hidden
 	endif
 
-	call filetree#display#Print()
-	call cursor(filetree#functions#GetLine(path), 1)
+	call filer#display#Print()
+	call cursor(filer#functions#GetLine(path), 1)
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#NavigateTo(dir) {{{1
-function! filetree#actions#NavigateTo(dir)
-	let g:filetree#opendirs = []
-	let old_path = g:filetree#pwd
+" FUNCTION: filer#actions#NavigateTo(dir) {{{1
+function! filer#actions#NavigateTo(dir)
+	let g:filer#opendirs = []
+	let old_path = g:filer#pwd
 
 	if a:dir == ".."
-		if g:filetree#pwd == "/"
+		if g:filer#pwd == "/"
 			return
 		endif
 
-		let path = "/" . join(split(g:filetree#pwd, "/")[0:-2], "/")
+		let path = "/" . join(split(g:filer#pwd, "/")[0:-2], "/")
 	else
 		let path = expand(a:dir)
 	endif
 
-	call filetree#tree#ChangeDirectory(path)
-	call filetree#display#Print()
+	call filer#tree#ChangeDirectory(path)
+	call filer#display#Print()
 
 	" Detect if the old path is in the current path, and if so got to its folder
 	let old_split = split(old_path, "/")
@@ -258,16 +258,16 @@ function! filetree#actions#NavigateTo(dir)
 	endif
 
 	if folder == ""
-		call cursor(g:filetree#first_line, 1)
+		call cursor(g:filer#first_line, 1)
 	else
-		call cursor(filetree#functions#GetLine(folder), 1)
+		call cursor(filer#functions#GetLine(folder), 1)
 	endif
 endfunction
 
 " }}}
 
-" FUNCTION: filetree#actions#AddFile(type) {{{1
-function! filetree#actions#AddFile(type)
+" FUNCTION: filer#actions#AddFile(type) {{{1
+function! filer#actions#AddFile(type)
 	if a:type == "f" || a:type == "file"
 		let type = 1
 	elseif a:type == "d" || a:type == "directory" || a:type == "dir"
@@ -276,59 +276,59 @@ function! filetree#actions#AddFile(type)
 		let type = confirm("What would you like to create? ", "File\nDirectory")
 	endif
 
-	let name = input("New " . (type == 1 ? "file" : "directory") . " name: ")
-	let dir = filetree#functions#GetCursorDirectory()
+	let name = input("New" (type == 1 ? "file" : "directory") "name: ")
+	let dir = filer#functions#GetCursorDirectory()
 	let cmd = (type == 1) ? "touch" : "mkdir"
 
 	exec "silent " . substitute("!" . cmd . " '" . dir . "/" . name . "'", "\n", "", "g")
 
-	call filetree#actions#Reload()
+	call filer#actions#Reload()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#SetExecutable(value) {{{1
-function! filetree#actions#SetExecutable(value) 
-	let file_index = filetree#functions#CursorIndex()
-	if file_index == -1 || g:filetree#tree[file_index].end == "/"
+" FUNCTION: filer#actions#SetExecutable(value) {{{1
+function! filer#actions#SetExecutable(value) 
+	let file_index = filer#functions#CursorIndex()
+	if file_index == -1 || g:filer#tree[file_index].end == "/"
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
 	if a:value == 0
 		silent exec "!chmod -x '" . path . "'"
-		let g:filetree#tree[file_index].end = ""
+		let g:filer#tree[file_index].end = ""
 	elseif a:value == 1
 		silent exec "!chmod +x '" . path . "'"
-		let g:filetree#tree[file_index].end = "*"
+		let g:filer#tree[file_index].end = "*"
 	else
-		if g:filetree#tree[file_index].end == "*"
+		if g:filer#tree[file_index].end == "*"
 			silent exec "!chmod -x '" . path . "'"
-			let g:filetree#tree[file_index].end = ""
+			let g:filer#tree[file_index].end = ""
 		else
 			silent exec "!chmod +x '" . path . "'"
-			let g:filetree#tree[file_index].end = "*"
+			let g:filer#tree[file_index].end = "*"
 		endif
 	endif
 
-	call filetree#display#Print()
+	call filer#display#Print()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#DeleteFile() {{{1
-function! filetree#actions#DeleteFile()
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#DeleteFile() {{{1
+function! filer#actions#DeleteFile()
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
-		let path = g:filetree#pwd
-		let g:filetree#pwd = system("dirname '" . system("dirname '" . g:filetree#pwd . "'") . "'")
+		let path = g:filer#pwd
+		let g:filer#pwd = system("dirname '" . system("dirname '" . g:filer#pwd . "'") . "'")
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 	let name = split(path, "/")[-1]
 
-	if filetree#functions#GetProperty(path, "L")
+	if filer#functions#GetProperty(path, "L")
 		let confirmed = input("Deleting link '" . name . "': y/N")
-	elseif filetree#functions#GetProperty(path, "d")
+	elseif filer#functions#GetProperty(path, "d")
 		let file_count = substitute(system("find '" . name . "' -type f | wc -l"), "", "", "g")
 
 		if file_count == 0
@@ -346,19 +346,19 @@ function! filetree#actions#DeleteFile()
 	if confirmed == 1
 		silent exec "!rm -rf '" . path . "'"
 
-		call remove(g:filetree#tree, filetree#functions#GetIndex(path))
-		call filetree#display#Print()
+		call remove(g:filer#tree, filer#functions#GetIndex(path))
+		call filer#display#Print()
 	endif
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#RenameFile() {{{1
-function! filetree#actions#RenameFile()
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#RenameFile() {{{1
+function! filer#actions#RenameFile()
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
 	let dir_path = join(split(path, "/")[0:-2], "/")
@@ -376,17 +376,17 @@ function! filetree#actions#RenameFile()
 
 	silent exec "!mv '" . path . "' '" . dir_path . new_name . "'"
 
-	call filetree#actions#Reload()
+	call filer#actions#Reload()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#MoveFile(action) {{{1
-function! filetree#actions#MoveFile(action)
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#MoveFile(action) {{{1
+function! filer#actions#MoveFile(action)
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
 	if a:action == "copy"
@@ -404,31 +404,31 @@ function! filetree#actions#MoveFile(action)
 	endif
 
 	echo statement . ", and press x to select it"
-	exec "noremap <buffer> <silent> <nowait> x :call filetree#actions#ConfirmMove('" . path . "', '" . command . "', '" . prompt . "')<CR>"
+	exec "noremap <buffer> <silent> <nowait> x :call filer#actions#ConfirmMove('" . path . "', '" . command . "', '" . prompt . "')<CR>"
 endfunction
 
-function! filetree#actions#ConfirmMove(path, command, prompt)
+function! filer#actions#ConfirmMove(path, command, prompt)
 	let name = split(a:path, "/")[-1]
-	let new_path = input(a:prompt, filetree#functions#GetCursorDirectory() . "/" . name)
+	let new_path = input(a:prompt, filer#functions#GetCursorDirectory() . "/" . name)
 	exec "!" . a:command . " '" . a:path . "' '" . new_path . "'"
 
 	silent! unmap <buffer> x
-	call filetree#actions#Reload()
+	call filer#actions#Reload()
 endfunction
 
 " }}}
-" FUNCTION: filetree#actions#GitCmd(cmd) {{{1
-function! filetree#actions#GitCmd(cmd)
-	let file_index = filetree#functions#CursorIndex()
+" FUNCTION: filer#actions#GitCmd(cmd) {{{1
+function! filer#actions#GitCmd(cmd)
+	let file_index = filer#functions#CursorIndex()
 	if file_index == -1
 		return
 	else
-		let path = g:filetree#tree[file_index].path
+		let path = g:filer#tree[file_index].path
 	endif
 
 	" Move to the parent directory of the file
 	let real_dir = getcwd()
-	let dir = filetree#functions#GetCursorDirectory()
+	let dir = filer#functions#GetCursorDirectory()
 	exec "cd " . dir
 
 	if a:cmd == "add"
@@ -452,7 +452,7 @@ function! filetree#actions#GitCmd(cmd)
 	" Go back to the origional directory
 	exec "cd " . real_dir
 
-	call filetree#actions#Reload()
+	call filer#actions#Reload()
 endfunction
 
 " }}}
