@@ -1,4 +1,4 @@
-" FUNCTION: filer#display#GetText()
+" FUNCTION: filer#display#GetText() {{{1
 function! filer#display#GetText()
 	" Get the longest version of the heading that will fit in the window
 	if g:filer#pwd == "/"
@@ -34,7 +34,8 @@ function! filer#display#GetText()
 	return output
 endfunction
 
-" FUNCTION: filer#display#Print()
+" }}}
+" FUNCTION: filer#display#Print() {{{1
 function! filer#display#Print()
 	setlocal modifiable
 
@@ -63,3 +64,4 @@ function! filer#display#Print()
 
 	setlocal nomodifiable
 endfunction
+" }}}

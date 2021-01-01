@@ -72,48 +72,27 @@ endfunction
 " }}}
 " FUNCTION: filer#InitializeMappings() {{{1
 function! filer#InitializeMappings()
-	let mappings = {}
+	nnoremap <buffer> <silent> <CR> :call filer#actions#Edit()<CR>
+	nnoremap <buffer> <silent> . :call filer#actions#ShowHidden(-1)<CR>
+	nnoremap <buffer> <silent> v :call filer#actions#ShowInfo()<CR>
 
-	let mappings["<CR>"] = "Edit()"
-	let mappings["."] = "ShowHidden(-1)"
-	let mappings.v = "ShowInfo()"
+	nnoremap <buffer> <silent> <Space> :call filer#actions#Open()<CR>
+	nnoremap <buffer> <silent> o :call filer#actions#OpenAll()<CR>
+	nnoremap <buffer> <silent> O :call filer#actions#CloseAll()<CR>
 
-	let mappings["<Space>"] = "Open()"
-	let mappings.o = "OpenAll()"
-	let mappings.O = "CloseAll()"
+	nnoremap <buffer> <silent> r  :call filer#actions#Reload()<CR>
+	nnoremap <buffer> <silent> k  :call filer#actions#Scroll('up')<CR>
+	nnoremap <buffer> <silent> j  :call filer#actions#Scroll('down')<CR>
+	nnoremap <buffer> <silent> h  :call filer#actions#DirMove('up')<CR>
+	nnoremap <buffer> <silent> l  :call filer#actions#DirMove('down')<CR>
+	nnoremap <buffer> <silent> H  :call filer#actions#DirShift('up')<CR>
+	nnoremap <buffer> <silent> L  :call filer#actions#DirShift('down')<CR>
 
-	let mappings.r  = "Reload()"
-	let mappings.k  = "Scroll('up')"
-	let mappings.j  = "Scroll('down')"
-	let mappings.h  = "DirMove('up')"
-	let mappings.l  = "DirMove('down')"
-	let mappings.H  = "DirShift('up')"
-	let mappings.L  = "DirShift('down')"
-
-	let mappings["~"] = "NavigateTo('~')"
-	let mappings.th = "NavigateTo('~')"
-	let mappings.tr = "NavigateTo('/')"
-	let mappings.u = "NavigateTo('..')"
-
-	let mappings.a  = "AddFile(' ')"
-	let mappings.af = "AddFile('f')"
-	let mappings.ad = "AddFile('d')"
-
-	let mappings.fx = "SetExecutable(-1)"
-	let mappings.fd = "DeleteFile()"
-	let mappings.fr = "RenameFile()"
-	let mappings.fm = "MoveFile('move')"
-	let mappings.fc = "MoveFile('copy')"
-	let mappings.fl = "MoveFile('link')"
-
-	let mappings.ga = "GitCmd('add')"
-	let mappings.gc = "GitCmd('commit')"
-	let mappings.gC = "GitCmd('ammend')"
-	let mappings.gl = "GitCmd('log')"
-
-	silent map clear
-	for q in keys(mappings)
-		exec "nnoremap <buffer> <silent> " . q . " :call filer#actions#" . mappings[q] . "<CR>"
-	endfor
+	nnoremap <buffer> <silent> ~ :call filer#actions#NavigateTo('~')<CR>
+	nnoremap <buffer> <silent> u :call filer#actions#NavigateTo('..')<CR>
+	
+	nnoremap <buffer> <silent> f :call filer#menu#FileMenu()<CR>
+	nnoremap <buffer> <silent> a :call filer#menu#AddMenu()<CR>
+	nnoremap <buffer> <silent> g :call filer#menu#GitMenu()<CR>
 endfunction
 " }}}

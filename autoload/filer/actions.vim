@@ -268,17 +268,9 @@ endfunction
 
 " FUNCTION: filer#actions#AddFile(type) {{{1
 function! filer#actions#AddFile(type)
-	if a:type == "f" || a:type == "file"
-		let type = 1
-	elseif a:type == "d" || a:type == "directory" || a:type == "dir"
-		let type = 2
-	else
-		let type = confirm("What would you like to create? ", "File\nDirectory")
-	endif
-
-	let name = input("New" (type == 1 ? "file" : "directory") "name: ")
+	let name = input("New " . (a:type == 1 ? "file" : "directory") . " name: ")
 	let dir = filer#functions#GetCursorDirectory()
-	let cmd = (type == 1) ? "touch" : "mkdir"
+	let cmd = (a:type == 1) ? "touch" : "mkdir"
 
 	exec "silent " . substitute("!" . cmd . " '" . dir . "/" . name . "'", "\n", "", "g")
 
@@ -323,13 +315,14 @@ function! filer#actions#DeleteFile()
 		let g:filer#pwd = system("dirname '" . system("dirname '" . g:filer#pwd . "'") . "'")
 	else
 		let path = g:filer#tree[file_index].path
+		let path_index = filer#functions#GetIndex(path)
 	endif
 	let name = split(path, "/")[-1]
 
 	if filer#functions#GetProperty(path, "L")
 		let confirmed = input("Deleting link '" . name . "': y/N")
 	elseif filer#functions#GetProperty(path, "d")
-		let file_count = substitute(system("find '" . name . "' -type f | wc -l"), "", "", "g")
+		let file_count = substitute(system("find '" . path . "' -type f | wc -l"), "", "", "g")
 
 		if file_count == 0
 			let confirmed = confirm("Deleting empty directory '" . name . "'", "Y\nN")
@@ -344,9 +337,14 @@ function! filer#actions#DeleteFile()
 	endif
 
 	if confirmed == 1
+		if filer#functions#GetProperty(path, "d")
+			call filer#tree#CloseDirectory(path_index)
+		endif
+
+		call remove(g:filer#tree, path_index)
+
 		silent exec "!rm -rf '" . path . "'"
 
-		call remove(g:filer#tree, filer#functions#GetIndex(path))
 		call filer#display#Print()
 	endif
 endfunction

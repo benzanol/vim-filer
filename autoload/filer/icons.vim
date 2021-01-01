@@ -1,4 +1,4 @@
-" FUNCTION: filer#icons#GetFiletypeIcon(file)
+" FUNCTION: filer#icons#GetFiletypeIcon(file) {{{1
 function! filer#icons#GetFiletypeIcon(file)
 	let file_split = split(a:file, "\\.")
 	if len(file_split) <= 1 || g:filer#icon_type == "text"
@@ -14,7 +14,8 @@ function! filer#icons#GetFiletypeIcon(file)
 	endif
 endfunction
 
-" FUNCTION: filer#icons#InitializeIcons()
+" }}}
+" FUNCTION: filer#icons#InitializeIcons() {{{1
 function! filer#icons#InitializeIcons()
 	let g:filer#icons = {}
 
@@ -62,3 +63,5 @@ function! filer#icons#InitializeIcons()
 
 	let g:filer_icons = g:filer#icons
 endfunction
+
+" }}}
