@@ -1,15 +1,15 @@
 " FUNCTION: filer#menu#FileMenu() {{{1
 function! filer#menu#FileMenu()
 	let file_actions = [
-				\ {"prompt":"&Rename", "command":"RenameFile()"},
-				\ {"prompt":"&Delete", "command":"DeleteFile()"},
-				\ {"prompt":"&Move", "command":"MoveFile('move')"},
-				\ {"prompt":"&Copy", "command":"MoveFile('copy')"},
-				\ {"prompt":"&Link", "command":"MoveFile('link')"},
-				\ {"prompt":"&X Make Executable", "command":"SetExecutable(-1)"}
+				\ {'prompt':'&Rename', 'command':'RenameFile()'},
+				\ {'prompt':'&Delete', 'command':'DeleteFile()'},
+				\ {'prompt':'&Move', 'command':'MoveFile("move")'},
+				\ {'prompt':'&Copy', 'command':'MoveFile("copy")'},
+				\ {'prompt':'&Link', 'command':'MoveFile("link")'},
+				\ {'prompt':'&X Make Executable', 'command':'SetExecutable(-1)'},
 				\ ]
 
-	let confirm_string = ""
+	let confirm_string = ''
 	for q in file_actions
 		let confirm_string .= q.prompt . "\n"
 	endfor
@@ -17,9 +17,9 @@ function! filer#menu#FileMenu()
 	" Remove last newline separator
 	let confirm_string = confirm_string[0:-2]
 
-	let action = confirm("File action menu", confirm_string)
+	let action = confirm('File action menu', confirm_string)
 	if action > 0
-		execute "call filer#actions#" . file_actions[action - 1].command
+		execute 'call filer#actions#' . file_actions[action - 1].command
 	endif
 endfunction
 
@@ -34,23 +34,23 @@ endfunction
 " FUNCTION: filer#menu#GitMenu() {{{1
 function! filer#menu#GitMenu()
 	let git_actions = [
-				\ {"&Add": "add"}
-				\ {"&Log": "log"}
-				\ {"&Commit": "commit"}
-				\ {"A&Mmend Commit": "ammend"}
+				\ {'prompt':'&Add', 'command':'add'},
+				\ {'prompt':'&Log', 'command':'log'},
+				\ {'prompt':'&Commit', 'command':'commit'},
+				\ {'prompt':'A&Mmend Commit', 'command':'ammend'},
 				\ ]
 
-	let confirm_string = ""
-	for q in file_actions
-		let confirm_string += q . "\n"
+	let confirm_string = ''
+	for q in git_actions
+		let confirm_string .= q.prompt . "\n"
 	endfor
 
 	" Remove last newline separator
 	let confirm_string = confirm_string[0:-2]
 
-	let action = confirm("Git action menu", confirm_string)
+	let action = confirm('Git action menu', confirm_string)
 	if action > 0
-		execute "call filer#actions#GitCmd('" . git_actions[action - 1] . "')"
+		execute 'call filer#actions#GitCmd("' . git_actions[action - 1].command . '")'
 	endif
 endfunction
 

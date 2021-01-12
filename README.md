@@ -14,7 +14,7 @@ To launch filer:\
 	* `~`: Go to the home directory
 	* `/`: Go to the root directory
 ## File management shortcuts
-* `v`: View information about a file or directory
+* `i`: Show information about a file or directory
 * `f`: Open the file editting menu
 	* `m`: Move the file
 	* `c`: Copy the file
@@ -22,11 +22,11 @@ To launch filer:\
 	* `r`: Rename the file
 	* `x`: Toggle the file being executable
 	* `d`: Delete the file
-* `g`: Open the git menu
+* `v`: Open the git command menu (v for version control)
 	* `a`: Git add the file
 	* `l`: Show the git log history
 	* `c`: Create a new commit
-	* `C`: Ammend the previous commit
+	* `m`: Ammend the previous commit
 * `a`: Open the add menu
-	* `f`: Create a new empty file
-	* `d`: Create a new empty directory
+	* `f`: Add a new empty file
+	* `d`: Add a new empty directory

@@ -4,7 +4,7 @@
 " Set variables on file load {{{1
 let g:filer = {}
 let g:filer#icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
-let g:filer#indent_marker = '│ ' " The marker to show the change in level between files
+let g:filer#indent_marker = '| ' " The marker to show the change in level between files
 let g:filer#buffer_name = '__filer__' " The stored name of the filer buffer
 let g:filer#buffer_size = 35 " The width of the filer buffer
 let g:filer#buffer_position = 'left' " The side of the screen for the filer to be on
@@ -72,27 +72,27 @@ endfunction
 " }}}
 " FUNCTION: filer#InitializeMappings() {{{1
 function! filer#InitializeMappings()
-	nnoremap <buffer> <silent> <CR> :call filer#actions#Edit()<CR>
-	nnoremap <buffer> <silent> . :call filer#actions#ShowHidden(-1)<CR>
-	nnoremap <buffer> <silent> v :call filer#actions#ShowInfo()<CR>
+	nnoremap <nowait> <buffer> <silent> <CR> :call filer#actions#Edit()<CR>
+	nnoremap <nowait> <buffer> <silent> . :call filer#actions#ShowHidden(-1)<CR>
+	nnoremap <nowait> <buffer> <silent> i :call filer#actions#ShowInfo()<CR>
 
-	nnoremap <buffer> <silent> <Space> :call filer#actions#Open()<CR>
-	nnoremap <buffer> <silent> o :call filer#actions#OpenAll()<CR>
-	nnoremap <buffer> <silent> O :call filer#actions#CloseAll()<CR>
+	nnoremap <nowait> <buffer> <silent> <Space> :call filer#actions#Open()<CR>
+	nnoremap <nowait> <buffer> <silent> o :call filer#actions#OpenAll()<CR>
+	nnoremap <nowait> <buffer> <silent> O :call filer#actions#CloseAll()<CR>
 
-	nnoremap <buffer> <silent> r  :call filer#actions#Reload()<CR>
-	nnoremap <buffer> <silent> k  :call filer#actions#Scroll('up')<CR>
-	nnoremap <buffer> <silent> j  :call filer#actions#Scroll('down')<CR>
-	nnoremap <buffer> <silent> h  :call filer#actions#DirMove('up')<CR>
-	nnoremap <buffer> <silent> l  :call filer#actions#DirMove('down')<CR>
-	nnoremap <buffer> <silent> H  :call filer#actions#DirShift('up')<CR>
-	nnoremap <buffer> <silent> L  :call filer#actions#DirShift('down')<CR>
+	nnoremap <nowait> <buffer> <silent> r  :call filer#actions#Reload()<CR>
+	nnoremap <nowait> <buffer> <silent> k  :call filer#actions#Scroll('up')<CR>
+	nnoremap <nowait> <buffer> <silent> j  :call filer#actions#Scroll('down')<CR>
+	nnoremap <nowait> <buffer> <silent> h  :call filer#actions#DirMove('up')<CR>
+	nnoremap <nowait> <buffer> <silent> l  :call filer#actions#DirMove('down')<CR>
+	nnoremap <nowait> <buffer> <silent> H  :call filer#actions#DirShift('up')<CR>
+	nnoremap <nowait> <buffer> <silent> L  :call filer#actions#DirShift('down')<CR>
 
-	nnoremap <buffer> <silent> ~ :call filer#actions#NavigateTo('~')<CR>
-	nnoremap <buffer> <silent> u :call filer#actions#NavigateTo('..')<CR>
+	nnoremap <nowait> <buffer> <silent> ~ :call filer#actions#NavigateTo('~')<CR>
+	nnoremap <nowait> <buffer> <silent> u :call filer#actions#NavigateTo('..')<CR>
 	
-	nnoremap <buffer> <silent> f :call filer#menu#FileMenu()<CR>
-	nnoremap <buffer> <silent> a :call filer#menu#AddMenu()<CR>
-	nnoremap <buffer> <silent> g :call filer#menu#GitMenu()<CR>
+	nnoremap <nowait> <buffer> <silent> f :call filer#menu#FileMenu()<CR>
+	nnoremap <nowait> <buffer> <silent> a :call filer#menu#AddMenu()<CR>
+	nnoremap <nowait> <buffer> <silent> v :call filer#menu#GitMenu()<CR>
 endfunction
 " }}}
