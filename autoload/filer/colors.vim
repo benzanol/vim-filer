@@ -14,15 +14,12 @@ function! filer#colors#SetColors()
 	exec "syn match filerGitAdded '" . s:i.g_added . "'"
 	exec "syn match filerGitModified '" . s:i.g_modified . "'"
 
-	silent exec "syn match filerIndent '" . g:filer#indent_marker . "'"
-
 	" Link color groups to colors
 	silent! let grey = { "fg":synIDattr(synIDtrans(hlID("Comment")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Comment")), "fg#", "gui") }
 	silent! let red = { "fg":synIDattr(synIDtrans(hlID("Directory")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Directory")), "fg#", "gui") }
 	silent! let green = { "fg":synIDattr(synIDtrans(hlID("String")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("String")), "fg#", "gui") }
 	silent! let purple = { "fg":synIDattr(synIDtrans(hlID("Question")), "fg#", "cterm"), "bg":synIDattr(synIDtrans(hlID("Question")), "fg#", "gui") }
 
-	silent! exec "hi filerIndent ctermfg=" . grey.fg . " guifg=" . grey.bg
 	silent! exec "hi filerDirectory ctermfg=" . red.fg . " guifg=" . red.bg
 	silent! exec "hi filerRedirect ctermfg=" . purple.fg . " guifg=" . purple.bg
 	silent! exec "hi filerExecutable ctermfg=" . green.fg . " guifg=" . green.bg

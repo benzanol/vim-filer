@@ -26,7 +26,7 @@ function! filer#display#GetText()
 			continue
 		endif
 
-		let indent = repeat(g:filer#indent_marker, q.level + 1)
+		let indent = repeat(" ", g:filer#indent_amount * q.level + 1)
 
 		call add(output, indent . q.start . " " . q.name . q.link . q.end)
 	endfor

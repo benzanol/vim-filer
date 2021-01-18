@@ -4,10 +4,10 @@
 " Set variables on file load {{{1
 let g:filer = {}
 let g:filer#icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
-let g:filer#indent_marker = '| ' " The marker to show the change in level between files
 let g:filer#buffer_name = '__filer__' " The stored name of the filer buffer
 let g:filer#buffer_size = 35 " The width of the filer buffer
 let g:filer#buffer_position = 'left' " The side of the screen for the filer to be on
+let g:filer#indent_amount = 2 " The number of spaces to indent each subdirectory by
 
 let s:script_path = expand("<sfile>:p")
 let s:plugin_path = expand("<sfile>:p:h:h")
@@ -67,7 +67,7 @@ function! filer#InitializeVariables()
 	let g:filer#opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
 	let g:filer#show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
 	let g:filer#first_line = 2 " First line of tree after any heading text
-	let s:indent_marker = "│ "
+	let g:filer#indent_amount = 2 " The number of spaces to indent each subdirectory by
 endfunction
 " }}}
 " FUNCTION: filer#InitializeMappings() {{{1
