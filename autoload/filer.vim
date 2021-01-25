@@ -51,7 +51,6 @@ function! filer#InitializeBuffer()
 	" Set settings in case they aren't already
 	let &buftype = "nofile"
 	setlocal nobuflisted
-	setlocal hidden
 	setlocal nonumber
 	setlocal nomodifiable
 	setlocal foldmethod=manual
