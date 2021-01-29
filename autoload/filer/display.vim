@@ -29,7 +29,7 @@ function! filer#display#GetText()
 
 		let indent = repeat(" ", g:filer#indent_amount * q.level + 1)
 
-		call add(output, " " . indent . q.start . " " . q.name . q.link . q.end . repeat(" ", 100))
+		call add(output, " " . indent . q.start . " " . q.name . q.end . q.link . repeat(" ", 100))
 	endfor
 
 	return output
@@ -61,7 +61,7 @@ function! filer#display#Print()
 	call cursor(cursor_location)
 
 	" Enable colors
-	call filer#colors#SetColors()
+	call filer#colors#SetupColors()
 
 	setlocal nomodifiable
 endfunction

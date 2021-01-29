@@ -53,7 +53,8 @@ function! filer#tree#GenerateTree(dir, level)
 		" Detect if file is a link
 		let new_item.link = ""
 		if link_ending[i][-1:-1] == "@"
-			let new_item.link = "@ " . g:filer#icons.f_redirect . " " . filer#functions#GetShortPath(resolve(new_item.path))
+			let new_item.end = "@"
+			let new_item.link = " " . g:filer#icons.f_redirect . " " . filer#functions#GetShortPath(resolve(new_item.path))
 		endif
 
 		" Detect if the file is an open directory

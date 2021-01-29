@@ -1,29 +1,12 @@
-" ==============================================================================
-" Important functions
-" ==============================================================================
-" Set variables on file load {{{1
-let g:filer = {}
-let g:filer#icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
-let g:filer#buffer_name = '__filer__' " The stored name of the filer buffer
-let g:filer#buffer_size = 35 " The width of the filer buffer
-let g:filer#buffer_position = 'left' " The side of the screen for the filer to be on
-let g:filer#indent_amount = 2 " The number of spaces to indent each subdirectory by
-
-let s:script_path = expand("<sfile>:p")
-let s:plugin_path = expand("<sfile>:p:h:h")
-" }}}
-
 " FUNCTION: filer#Launch() {{{1
 function! filer#Launch()
-	" Call other initialization functions
-	if !exists("s:filer_open")
-		let s:filer_open = 1
-		call filer#InitializeVariables()
-		call filer#icons#InitializeIcons()
-	endif
-
 	call filer#InitializeBuffer()
-	call filer#InitializeMappings()
+
+	if !exists('s:called_before')
+		call filer#InitializeMappings()
+		call filer#icons#InitializeIcons()
+		let s:called_before = 1
+	endif
 
 	" Generate the starting tree
 	let g:filer#pwd = getcwd()
@@ -32,8 +15,8 @@ function! filer#Launch()
 	" Draw the filer to the screen
 	call filer#display#Print()
 endfunction
-
 " }}}
+
 " FUNCTION: filer#InitializeBuffer() {{{1
 function! filer#InitializeBuffer()
 	let window_number = bufwinnr(g:filer#buffer_name)
@@ -59,18 +42,9 @@ function! filer#InitializeBuffer()
 	setlocal winfixheight
 	setlocal winfixwidth
 	setlocal signcolumn=no
-	
+
 	" Make cursor always stay at the beginning of the line
 	autocmd CursorMoved <buffer> call cursor(line("."), 1)
-endfunction
-" }}}
-" FUNCTION: filer#InitializeVariables() {{{1
-function! filer#InitializeVariables()
-	let g:g:filer#pwd = getcwd()
-	let g:filer#opendirs = [] " Stores a list of paths representing directories for which the contents should be displayed in the tree
-	let g:filer#show_hidden = 0 " Boolean representing whether hidden files should be shown in the tree
-	let g:filer#first_line = 2 " First line of tree after any heading text
-	let g:filer#indent_amount = 2 " The number of spaces to indent each subdirectory by
 endfunction
 " }}}
 " FUNCTION: filer#InitializeMappings() {{{1
@@ -93,7 +67,7 @@ function! filer#InitializeMappings()
 
 	nnoremap <nowait> <buffer> <silent> ~ :call filer#actions#NavigateTo('~')<CR>
 	nnoremap <nowait> <buffer> <silent> u :call filer#actions#NavigateTo('..')<CR>
-	
+
 	nnoremap <nowait> <buffer> <silent> f :call filer#menu#FileMenu()<CR>
 	nnoremap <nowait> <buffer> <silent> a :call filer#menu#AddMenu()<CR>
 	nnoremap <nowait> <buffer> <silent> v :call filer#menu#GitMenu()<CR>
