@@ -1,8 +1,14 @@
 # Filer
 A nerdtree clone with improved speed, as well as additional file management features\
 \
-To launch filer:\
-`call filer#Launch()`
+To open filer:\
+`FilerOpen`
+
+To close filer:\
+`FilerClose`
+
+To toggle filer being open:\
+`FilerToggle`
 ## Navigation Shortcuts
 * `?`: Show a list of shortcuts within the plugin
 * `Space`: Toggle a directory being open

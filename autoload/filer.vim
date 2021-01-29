@@ -1,9 +1,9 @@
 " FUNCTION: filer#Open() {{{1
 function! filer#Open()
 	call filer#InitializeBuffer()
+	call filer#InitializeMappings()
 
 	if !exists('s:called_before')
-		call filer#InitializeMappings()
 		call filer#icons#InitializeIcons()
 		let s:called_before = 1
 	endif
