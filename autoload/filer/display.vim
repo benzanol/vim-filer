@@ -17,6 +17,7 @@ function! filer#display#GetText()
 			endif
 		endif
 	endif
+	let heading =  " " . heading . repeat(" ", 100)
 
 	" Convert the tree list into a formatted string with line breaks and indents
 	let output = [heading]
@@ -28,7 +29,7 @@ function! filer#display#GetText()
 
 		let indent = repeat(" ", g:filer#indent_amount * q.level + 1)
 
-		call add(output, indent . q.start . " " . q.name . q.link . q.end)
+		call add(output, " " . indent . q.start . " " . q.name . q.link . q.end . repeat(" ", 100))
 	endfor
 
 	return output

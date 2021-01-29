@@ -58,6 +58,10 @@ function! filer#InitializeBuffer()
 	setlocal nowrap
 	setlocal winfixheight
 	setlocal winfixwidth
+	setlocal signcolumn=no
+	
+	" Make cursor always stay at the beginning of the line
+	autocmd CursorMoved <buffer> call cursor(line("."), 1)
 endfunction
 " }}}
 " FUNCTION: filer#InitializeVariables() {{{1
