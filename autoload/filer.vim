@@ -1,5 +1,5 @@
-" FUNCTION: filer#Launch() {{{1
-function! filer#Launch()
+" FUNCTION: filer#Open() {{{1
+function! filer#Open()
 	call filer#InitializeBuffer()
 
 	if !exists('s:called_before')
@@ -14,6 +14,24 @@ function! filer#Launch()
 
 	" Draw the filer to the screen
 	call filer#display#Print()
+endfunction
+" }}}
+" FUNCTION: filer#Close() {{{1
+function! filer#Close()
+	let window = bufwinnr(g:filer#buffer_name)
+	if window > 0
+		execute window . 'close!'
+	endif
+endfunction
+" }}}
+" FUNCTION: filer#IsOpen() {{{1
+function! filer#IsOpen()
+	let window = bufwinnr(g:filer#buffer_name)
+	if window > 0
+		return 1
+	else
+		return 0
+	endif
 endfunction
 " }}}
 
