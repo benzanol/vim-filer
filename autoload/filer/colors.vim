@@ -12,7 +12,7 @@ function! filer#colors#SetupColors()
 	execute printf('syntax match filerGitModified /%s/', g:filer#icons.g_modified)
 
 	highlight filerPwd ctermfg=74 guifg=#5FAFD7 cterm=bold gui=bold
-	highlight filerFile ctermfg=250 guifg=#BCBCBC
+	highlight filerFile ctermfg=7 guifg=#BCBCBC
 	highlight filerDirectory ctermfg=74 guifg=#5FAFD7
 	highlight filerExecutable ctermfg=40 guifg=#00D700
 	highlight filerLink ctermfg=171 guifg=#D75FFF
@@ -27,7 +27,7 @@ function! filer#colors#SetupColors()
 		syntax match filerCurrentPwd /\%# \/\s*$/
 
 		highlight filerCurrentPwd ctermfg=74 guifg=#5FAFD7 cterm=bold,inverse gui=bold,inverse
-		highlight filerCurrentFile ctermfg=250 guifg=#BCBCBC cterm=bold,inverse gui=bold,inverse
+		highlight filerCurrentFile ctermfg=7 guifg=#BCBCBC cterm=bold,inverse gui=bold,inverse
 		highlight filerCurrentDirectory ctermfg=74 guifg=#5FAFD7 cterm=bold,inverse gui=bold,inverse
 		highlight filerCurrentExecutable ctermfg=34 guifg=#00AF00 cterm=bold,inverse gui=bold,inverse
 		highlight filerCurrentLink ctermfg=134 guifg=#AF54D7 cterm=bold,inverse gui=bold,inverse
@@ -43,11 +43,11 @@ function! filer#colors#SetupColors()
 	highlight filerGitModified ctermfg=203 guifg=#FF5F5F cterm=none gui=none
 endfunction
 
-function! filer#colors#SetupHighlight(args)
-endfunction
-
 function! filer#colors#SetCursorColor()
 	let type = g:filer#tree[filer#functions#CursorIndex()].end
+
+	highlight filerCursor cterm=none gui=none
+
 	if line('.') == 1
 		highlight filerCursor ctermfg=74 guifg=#5FAFD7 ctermbg=74 guibg=#5FAFD7 cterm=bold gui=bold
 	elseif type == '/'

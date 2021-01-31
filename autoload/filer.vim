@@ -2,6 +2,7 @@
 function! filer#Open()
 	call filer#InitializeBuffer()
 	call filer#InitializeMappings()
+	call filer#colors#SetupColors()
 
 	if !exists('s:called_before')
 		call filer#icons#InitializeIcons()
