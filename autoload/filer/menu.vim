@@ -38,6 +38,7 @@ function! filer#menu#GitMenu()
 				\ {'prompt':'&Log', 'command':'log'},
 				\ {'prompt':'&Commit', 'command':'commit'},
 				\ {'prompt':'A&Mmend Commit', 'command':'ammend'},
+				\ {'prompt':'&Push', 'command':'push'},
 				\ ]
 
 	let confirm_string = ''
@@ -48,9 +49,9 @@ function! filer#menu#GitMenu()
 	" Remove last newline separator
 	let confirm_string = confirm_string[0:-2]
 
-	let action = confirm('Git action menu', confirm_string)
-	if action > 0
-		execute 'call filer#actions#GitCmd("' . git_actions[action - 1].command . '")'
+	let action = confirm('Git action menu', confirm_string) - 1
+	if action > -1
+		call filer#git#GitCmd(git_actions[action].command)
 	endif
 endfunction
 
