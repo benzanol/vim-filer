@@ -27,8 +27,14 @@ function! filer#actions#Edit()
 		call filer#tree#ChangeDirectory(path)
 		call filer#display#Print()
 	else
-		wincmd p
-		exec "edit " . resolve(path)
+		" Detect if it is a special file
+		let icon = filer#icons#GetFiletypeIcon(split(path, '\/')[-1])
+		if  icon == g:filer#icons.f_file || icon == g:filer#icons.e_exe
+			wincmd p
+			exec "edit " . resolve(path)
+		else
+			silent! exec "!xdg-open '" . resolve(path) . "'"
+		endif
 	endif
 endfunction
 
