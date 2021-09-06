@@ -27,15 +27,22 @@ function! filer#actions#Edit()
 		call filer#tree#ChangeDirectory(path)
 		call filer#display#Print()
 	else
-		" Detect if it is a special file
-		let icon = filer#icons#GetFiletypeIcon(split(path, '\/')[-1])
-		if  icon == g:filer#icons.f_file || icon == g:filer#icons.e_exe
-			wincmd p
-			exec "edit " . resolve(path)
-		else
-			silent! exec "!xdg-open '" . resolve(path) . "'"
-		endif
+		wincmd p
+		exec "edit " . resolve(path)
 	endif
+endfunction
+
+" }}}
+" FUNCTION: filer#actions#XdgOpen() {{{1
+function! filer#actions#XdgOpen()
+	let file_index = filer#functions#CursorIndex()
+	if file_index == -1
+		return
+	else
+		let path = g:filer#tree[file_index].path
+	endif
+
+	silent! exec "!xdg-open '" . resolve(path) . "'"
 endfunction
 
 " }}}

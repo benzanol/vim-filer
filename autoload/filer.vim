@@ -69,6 +69,7 @@ endfunction
 " FUNCTION: filer#InitializeMappings() {{{1
 function! filer#InitializeMappings()
 	nnoremap <nowait> <buffer> <silent> <CR> :call filer#actions#Edit()<CR>
+	nnoremap <nowait> <buffer> <silent> x :call filer#actions#XdgOpen()<CR>
 	nnoremap <nowait> <buffer> <silent> . :call filer#actions#ShowHidden(-1)<CR>
 	nnoremap <nowait> <buffer> <silent> i :call filer#actions#ShowInfo()<CR>
 

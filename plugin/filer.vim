@@ -3,7 +3,7 @@
 " ==============================================================================
 " Initialize default variables
 let g:filer = {}
-let g:filer#icon_type = 'filled' " Can be 'filled', 'outline', 'unicode', or 'text'
+let g:filer#icon_type = 'filled' " Can be 'filled', 'outline', (nerdfont required,) 'unicode' (unicode icons), or 'text' (for tty)
 let g:filer#buffer_name = '__filer__' " The stored name of the filer buffer
 let g:filer#buffer_size = 35 " The width of the filer buffer
 let g:filer#buffer_position = 'left' " The side of the screen for the filer to be on
